@@ -6,7 +6,8 @@ display a list of portals in, and on the edges of, polygons and circles.  It wil
 The plugin also provides the ability to bring portals to the front draw layer so that you can click on them after drawing a 
 circle or polygon over them.
 
-See the [User Guide](https://github.com/hayeswise/iitc-poimarker/wiki/User-Guide).
+![Portals-in-Polygon controls](https://github.com/hayeswise/iitc-portalsinpolygon/raw/master/doc/portals-in-polygons-ui.png)
+
 
 # Prerequistites
 * IITC ([https://IITC.me](https://iitc.me/))
