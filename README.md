@@ -1,4 +1,4 @@
-# iitc-portalsinpolygon
+# iitc-portalsinpolygons
 IITC plugin for displaying a list of portals in polygons and circles, and their perimeter, and on lines.
 The Portals-in-Polygon is a plugin for the [Ingress Intel Total Conversion](https://iitc.me/) web application and is used to 
 display a list of portals in, and on the edges of, polygons and circles.  It wil also display the list of portals on lines.
