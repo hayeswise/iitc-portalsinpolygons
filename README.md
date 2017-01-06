@@ -8,6 +8,7 @@ circle or polygon over them.
 
 ![Portals-in-Polygon controls](https://github.com/hayeswise/iitc-portalsinpolygon/raw/master/doc/portals-in-polygons-ui.png)
 
+See the [Wiki](https://github.com/hayeswise/iitc-portalsinpolygon/wiki) for the API and a user guide on creating your own customizations.
 
 # Prerequistites
 * IITC ([https://IITC.me](https://iitc.me/))
