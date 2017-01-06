@@ -32,3 +32,11 @@ _Open the Tampermonkey menu and choose "Check for userscript updates". If you ha
 ### Firefox and Greasemonkey
 
 _Open the Greasemonkey menu and choose "Manage user scripts". Now click the cog icon and choose "Check for updates". However, sometimes Greasemonkey fails to update all scripts. Check the date+time listed at the start of the description (e.g. "[jonatkins-2013-08-23-042102]") and if any have failed to update then manually download from the list below. Once updated, reload the Intel map and the new version will be active._
+
+# Acknowledgements
+The solutions uses the following:
+
+* Dan Sunday's [Winding Number and isLeft C++](http://geomalgorithms.com/a03-_inclusion.html) implementation. [Copyright and License]( http://geomalgorithms.com/a03-_inclusion.html).
+* [IITC - Ingress Intel Total Conversion](https://iitc.me/) and on [GitHub](https://github.com/iitc-project/ingress-intel-total-conversion).  [License](https://github.com/iitc-project/ingress-intel-total-conversion/blob/master/LICENSE)
+* [Leaflet.Geodesic](https://github.com/Fragger/Leaflet.Geodesic) by Kevin Brasier (a.k.a. Fragger). [License](https://github.com/Fragger/Leaflet.Geodesic/blob/master/LICENSE).  Note that IITC uses a customized version of Leaflet.Geodesic that inlcudes additional classes.  See the IITC distribution of the L.Geodesc.js in GitHub.
+* [Leaflet](http://leafletjs.com/) - "an open-source JavaScript library for mobile-friendly interactive maps."
