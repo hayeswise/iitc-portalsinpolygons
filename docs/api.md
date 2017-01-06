@@ -2,7 +2,7 @@
 
 <dl>
 <dt><a href="#wrapper">wrapper()</a></dt>
-<dd><p>Portals-in-Polygon wrapper (closure).</p>
+<dd><p>Portals-in-Polygon wrapper (Javaascript closure).</p>
 <p>Standard IITC wrapper pattern (and JavaScript encapsulation pattern).
 See last three lines of this file where it is used.</p>
 </dd>
@@ -19,7 +19,7 @@ See last three lines of this file where it is used.</p>
 <a name="wrapper"></a>
 
 ## wrapper()
-Portals-in-Polygon wrapper (closure).Standard IITC wrapper pattern (and JavaScript encapsulation pattern).See last three lines of this file where it is used.
+Portals-in-Polygon wrapper (Javaascript closure).Standard IITC wrapper pattern (and JavaScript encapsulation pattern).See last three lines of this file where it is used.
 
 **Kind**: global function  
 <a name="external_window.portals"></a>
