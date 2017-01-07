@@ -50,5 +50,5 @@ The solutions uses the following:
 * "show list of portals" (a.k.a. portal-list) IITC plugin by [teo96](https://github.com/teo96), et al.
 
 Also, thanks to
-* [billplaysonline](https://github.com/billplaysonline) for posting issue [portals-list #1161](https://github.com/iitc-project/ingress-intel-total-conversion/issues/1161) and providing sample code
-* [McBen] for function `mapZoomHasPortals` in [Portals-list fix #1169](https://github.com/iitc-project/ingress-intel-total-conversion/compare/master...McBen:portals_list_fix).
+* Bill Schlesinger [billplaysonline](https://github.com/billplaysonline) for posting issue [portals-list #1161](https://github.com/iitc-project/ingress-intel-total-conversion/issues/1161) and providing sample code
+* [McBen](https://github.com/McBen) for function `mapZoomHasPortals` in [Portals-list fix #1169](https://github.com/iitc-project/ingress-intel-total-conversion/compare/master...McBen:portals_list_fix).
