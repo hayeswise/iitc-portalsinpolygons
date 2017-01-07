@@ -33,6 +33,13 @@ _Open the Tampermonkey menu and choose "Check for userscript updates". If you ha
 
 _Open the Greasemonkey menu and choose "Manage user scripts". Now click the cog icon and choose "Check for updates". However, sometimes Greasemonkey fails to update all scripts. Check the date+time listed at the start of the description (e.g. "[jonatkins-2013-08-23-042102]") and if any have failed to update then manually download from the list below. Once updated, reload the Intel map and the new version will be active._
 
+# Related IITC Plugins
+Portals-in-Polygons is a psuedo extension of the "show list of portals" (a.k.a. portal-list) IITC plugin.  I've created generalized
+versions of some of 
+the "show list of portals" functions that I hope to incorporate into that code base, time permitting.  As of this writing, McBen 
+provided a fix [Portals-list fix #1169](https://github.com/iitc-project/ingress-intel-total-conversion/compare/master...McBen:portals_list_fix) and some refactoring/generalization to the portal-list plugin.  It appears that
+we may have been developing our solutions in parallel.
+
 # Acknowledgements
 The solutions uses the following:
 
@@ -40,3 +47,8 @@ The solutions uses the following:
 * [IITC - Ingress Intel Total Conversion](https://iitc.me/) and on [GitHub](https://github.com/iitc-project/ingress-intel-total-conversion).  [License](https://github.com/iitc-project/ingress-intel-total-conversion/blob/master/LICENSE)
 * [Leaflet.Geodesic](https://github.com/Fragger/Leaflet.Geodesic) by Kevin Brasier (a.k.a. Fragger). [License](https://github.com/Fragger/Leaflet.Geodesic/blob/master/LICENSE).  Note that IITC uses a customized version of Leaflet.Geodesic that inlcudes additional classes.  See the IITC distribution of the L.Geodesc.js in GitHub.
 * [Leaflet](http://leafletjs.com/) - "an open-source JavaScript library for mobile-friendly interactive maps."
+* "show list of portals" (a.k.a. portal-list) IITC plugin by [teo96](https://github.com/teo96), et al.
+
+Also, thanks to
+* [billplaysonline](https://github.com/billplaysonline) for posting issue [portals-list #1161](https://github.com/iitc-project/ingress-intel-total-conversion/issues/1161) and providing sample code
+* [McBen] for function `mapZoomHasPortals` in [Portals-list fix #1169](https://github.com/iitc-project/ingress-intel-total-conversion/compare/master...McBen:portals_list_fix).
