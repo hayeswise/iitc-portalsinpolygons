@@ -44,7 +44,7 @@ we may have been developing our solutions in parallel.
 The solutions uses the following:
 
 * Dan Sunday's [Winding Number and isLeft C++](http://geomalgorithms.com/a03-_inclusion.html) implementation. [Copyright and License]( http://geomalgorithms.com/a03-_inclusion.html).
-* [IITC - Ingress Intel Total Conversion](https://iitc.me/) and on [GitHub](https://github.com/iitc-project/ingress-intel-total-conversion).  [License](https://github.com/iitc-project/ingress-intel-total-conversion/blob/master/LICENSE)
+* [IITC - Ingress Intel Total Conversion](https://iitc.me/) and on [GitHub](https://github.com/iitc-project/ingress-intel-total-conversion).  [License](https://github.com/iitc-project/ingress-intel-total-conversion/blob/master/LICENSE).
 * [Leaflet.Geodesic](https://github.com/Fragger/Leaflet.Geodesic) by Kevin Brasier (a.k.a. Fragger). [License](https://github.com/Fragger/Leaflet.Geodesic/blob/master/LICENSE).  Note that IITC uses a customized version of Leaflet.Geodesic that inlcudes additional classes.  See the IITC distribution of the L.Geodesc.js in GitHub.
 * [Leaflet](http://leafletjs.com/) - "an open-source JavaScript library for mobile-friendly interactive maps."
 * "show list of portals" (a.k.a. portal-list) IITC plugin by [teo96](https://github.com/teo96), et al.
