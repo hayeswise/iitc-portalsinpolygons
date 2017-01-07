@@ -20,7 +20,7 @@ Currently, access to this plugin is for Ingress Resistance agents on an invite-o
 
 I recommend you install Tampermonkey if you are using Chrome or Greasemonkey if you are using Firefox.
 
-Download the latest version [**here**](https://github.com/hayeswise/iitc-poimarker/raw/master/wise-poimarker.user.js).  Tampermonkey or Greasemonkey will provide the install/reinstall page.  Click the install/reinstall button.
+Download the latest version [**here**](https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.user.js).  Tampermonkey or Greasemonkey will provide the install/reinstall page.  Click the install/reinstall button.
 
 ## Updating
 If the plugin is already installed, it's easy to update in most cases.  Either click on the download link, above, or follow the these instructions from the IITC website:
