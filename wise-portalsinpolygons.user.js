@@ -2,7 +2,6 @@
 // @id             iitc-plugin-portalsinpolygons@hayeswise
 // @name           IITC plugin: Portals-in-Polygons
 // @category       Layer
-// @version        0.2017.01.06
 // @namespace      https://github.com/hayeswise/iitc-wise-portalsinpolygon
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
 // @updateURL      https://raw.githubusercontent.com/hayeswise/iitc-wise-portalsinpolygon/master/wise-portalsinpolygons.user.js
@@ -330,28 +329,29 @@ function wrapper(plugin_info) {
         }
         title = (typeof title === 'undefined' ? "Portal list" : title);
 
-		if (!portalsinpolygons.mapZoomHasPortals()) {
-			list = $('<table class="noPortals"><tr><td>Please zoom to get additional portal data like the portal title.</td></tr></table>');
-		} else {
-			// plugins (e.g. bookmarks) can insert fields before the standard ones - so we need to search for the 'level' column
-			window.plugin.portalslist.sortBy = window.plugin.portalslist.fields.map(function (f) {
-				return f.title;
-			}).indexOf('Level');
-			window.plugin.portalslist.sortOrder = -1;
-			window.plugin.portalslist.enlP = 0;
-			window.plugin.portalslist.resP = 0;
-			window.plugin.portalslist.neuP = 0;
-			window.plugin.portalslist.filter = 0;
+        if (!portalsinpolygons.mapZoomHasPortals()) {
+            console.warn("Map is zoomed too far out to get sufficient portal data (e.g., the portal name).");
+            list = $('<table class="noPortals"><tr><td>Please zoom to get additional portal data like the portal title.</td></tr></table>');
+        } else {
+            // plugins (e.g. bookmarks) can insert fields before the standard ones - so we need to search for the 'level' column
+            window.plugin.portalslist.sortBy = window.plugin.portalslist.fields.map(function (f) {
+                return f.title;
+            }).indexOf('Level');
+            window.plugin.portalslist.sortOrder = -1;
+            window.plugin.portalslist.enlP = 0;
+            window.plugin.portalslist.resP = 0;
+            window.plugin.portalslist.neuP = 0;
+            window.plugin.portalslist.filter = 0;
 
-			// Get portals and format them for display.
-			portals = getPortalsFn.call(this);
-			formattedPortals = portalsinpolygons.formattedPortalList(portals);
-			if (formattedPortals.length > 0) {
-				list = window.plugin.portalslist.portalTable(window.plugin.portalslist.sortBy, window.plugin.portalslist.sortOrder, window.plugin.portalslist.filter);
-			} else {
-				list = $('<table class="noPortals"><tr><td>Nothing to show!</td></tr></table>');
-			}
-		}
+            // Get portals and format them for display.
+            portals = getPortalsFn.call(this);
+            formattedPortals = portalsinpolygons.formattedPortalList(portals);
+            if (formattedPortals.length > 0) {
+                list = window.plugin.portalslist.portalTable(window.plugin.portalslist.sortBy, window.plugin.portalslist.sortOrder, window.plugin.portalslist.filter);
+            } else {
+                list = $('<table class="noPortals"><tr><td>Nothing to show!</td></tr></table>');
+            }
+        }
         // Display table of portals.
         if (window.useAndroidPanes()) {
             $('<div id="portalslist" class="mobile">').append(list).appendTo(document.body);
@@ -362,7 +362,8 @@ function wrapper(plugin_info) {
                 title: title + ': ' + window.plugin.portalslist.listPortals.length + ' ' + (window.plugin.portalslist.listPortals.length == 1 ? 'portal' : 'portals'),
                 id: 'portalsinpolygons-list',
                 width: 700
-            });
+                }
+            );
         }
     };
 
@@ -426,9 +427,9 @@ function wrapper(plugin_info) {
                 cell = row.insertCell(-1);
 
                 var value = field.value(portal);
-				if (typeof value === 'undefined') {
-					value = "[unknown]";
-				}
+                if (typeof value === 'undefined') {
+                    value = "[unknown]";
+                }
                 obj.values.push(value);
 
                 obj.sortValues.push(field.sortValue && !!value ? field.sortValue(value, portal) : value);
@@ -607,13 +608,15 @@ function wrapper(plugin_info) {
                 keepPortalFn = portalsinpolygons.isPortalDisplayed;
             }
         }
-        displayBounds = window.map.getBounds();
+        displayBounds = window.map.getBounds(); // the bounds could contain larger than life lat and lngs if zoomed out far.
+		displayBounds.getSouthWest().wrap();
+        displayBounds.getNorthEast().wrap();
 
         boundedPortals = Object.keys(window.portals).reduce(function (collectedPortals, guid, currentIndex, array) {
             var portal;
             portal = window.portals[guid];
-//			var exp = {latLng: portal.getLatLng(), contains: displayBounds.contains(portal.getLatLng()), keep:keepPortalFn(portal)};
-//			console.log("exp="+JSON.stringify(exp));
+            //			var exp = {latLng: portal.getLatLng(), contains: displayBounds.contains(portal.getLatLng()), keep:keepPortalFn(portal)};
+            //			console.log("exp="+JSON.stringify(exp));
             if (displayBounds.contains(portal.getLatLng()) && keepPortalFn(portal)) {
                 collectedPortals[guid] = portal;
             }
@@ -662,19 +665,19 @@ function wrapper(plugin_info) {
         return keep;
     };
 
-	/**
+    /**
 	 * Checks if there is sufficient portal data for the current map zoom.  When the zoom is set very far,
      * `window.portals` will only contain placeholder data and may not contain the portal title and other
 	 * information.
 	 * @todo it might be easier to check if one of the portals has the data your are looking for (e.g., check if portal.options.data.title exists).
 	 * @returns {boolean} True if there is sufficient portal data; otherwise, returns false.
 	 */
-	portalsinpolygons.mapZoomHasPortals = function() {
-	  var zoom = map.getZoom();
-	  zoom = getDataZoomForMapZoom(zoom);
-	  var tileParams = getMapZoomTileParameters(zoom);
-	  return tileParams.hasPortals;
-	};
+    portalsinpolygons.mapZoomHasPortals = function() {
+        var zoom = map.getZoom();
+        zoom = getDataZoomForMapZoom(zoom);
+        var tileParams = getMapZoomTileParameters(zoom);
+        return tileParams.hasPortals;
+    };
 
     /**
 	 * Checks if the pre-requisite plugins are installed.  If not, displays an alert.
