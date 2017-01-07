@@ -192,10 +192,9 @@ Closure function for Portals-in-Polygon.Standard IITC wrapper pattern used to 
         * [.formattedPortalList(portals)](#wrapper..portalsinpolygons.formattedPortalList) ⇒
         * [.getLayerClassName(layer)](#wrapper..portalsinpolygons.getLayerClassName) ⇒ <code>String</code>
         * [.getPortalGuidsFilteredByLayerGroup(portals)](#wrapper..portalsinpolygons.getPortalGuidsFilteredByLayerGroup) ⇒ <code>Array.&lt;string&gt;</code>
-        * [.normalizeDisplayBounds(bounds)](#wrapper..portalsinpolygons.normalizeDisplayBounds)
         * [.getToolboxControls()](#wrapper..portalsinpolygons.getToolboxControls) ⇒ <code>Object</code>
         * [.isPortalDisplayed(portal)](#wrapper..portalsinpolygons.isPortalDisplayed) ⇒ <code>Object</code> &#124; <code>null</code>
-        * [.listContainedPortals()](#wrapper..portalsinpolygons.listContainedPortals)
+        * [.mapZoomHasPortals()](#wrapper..portalsinpolygons.mapZoomHasPortals) ⇒ <code>boolean</code>
         * [.prerequisitePluginsInstalled()](#wrapper..portalsinpolygons.prerequisitePluginsInstalled) ⇒ <code>boolean</code>
         * [.setup()](#wrapper..portalsinpolygons.setup)
 
@@ -212,10 +211,9 @@ Portals-in-Polygon namespace.  `portalsinpolygon` is set to `window.plugin.porta
     * [.formattedPortalList(portals)](#wrapper..portalsinpolygons.formattedPortalList) ⇒
     * [.getLayerClassName(layer)](#wrapper..portalsinpolygons.getLayerClassName) ⇒ <code>String</code>
     * [.getPortalGuidsFilteredByLayerGroup(portals)](#wrapper..portalsinpolygons.getPortalGuidsFilteredByLayerGroup) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.normalizeDisplayBounds(bounds)](#wrapper..portalsinpolygons.normalizeDisplayBounds)
     * [.getToolboxControls()](#wrapper..portalsinpolygons.getToolboxControls) ⇒ <code>Object</code>
     * [.isPortalDisplayed(portal)](#wrapper..portalsinpolygons.isPortalDisplayed) ⇒ <code>Object</code> &#124; <code>null</code>
-    * [.listContainedPortals()](#wrapper..portalsinpolygons.listContainedPortals)
+    * [.mapZoomHasPortals()](#wrapper..portalsinpolygons.mapZoomHasPortals) ⇒ <code>boolean</code>
     * [.prerequisitePluginsInstalled()](#wrapper..portalsinpolygons.prerequisitePluginsInstalled) ⇒ <code>boolean</code>
     * [.setup()](#wrapper..portalsinpolygons.setup)
 
@@ -267,15 +265,6 @@ Returns a set of guids belonging to the portals filtered by the layer group sele
 | --- | --- | --- |
 | portals | <code>Object</code> | An associative array of IITC portal objects. |
 
-<a name="wrapper..portalsinpolygons.normalizeDisplayBounds"></a>
-
-#### portalsinpolygons.normalizeDisplayBounds(bounds)
-**Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
-
-| Param | Type |
-| --- | --- |
-| bounds | <code>L.LatLngBounds</code> | 
-
 <a name="wrapper..portalsinpolygons.getToolboxControls"></a>
 
 #### portalsinpolygons.getToolboxControls() ⇒ <code>Object</code>
@@ -295,12 +284,17 @@ Returns the portal if it is displayed based on the the layer group selections of
 | --- | --- | --- |
 | portal | <code>Object</code> | An IITC portal object. |
 
-<a name="wrapper..portalsinpolygons.listContainedPortals"></a>
+<a name="wrapper..portalsinpolygons.mapZoomHasPortals"></a>
 
-#### portalsinpolygons.listContainedPortals()
-Lists out portals in polygons and circles.
+#### portalsinpolygons.mapZoomHasPortals() ⇒ <code>boolean</code>
+Checks if there is sufficient portal data for the current map zoom.  When the zoom is set very far,`window.portals` will only contain placeholder data and may not contain the portal title and otherinformation.
 
 **Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
+**Returns**: <code>boolean</code> - True if there is sufficient portal data; otherwise, returns false.  
+**Todo**
+
+- [ ] it might be easier to check if one of the portals has the data your are looking for (e.g., check if portal.options.data.title exists).
+
 <a name="wrapper..portalsinpolygons.prerequisitePluginsInstalled"></a>
 
 #### portalsinpolygons.prerequisitePluginsInstalled() ⇒ <code>boolean</code>
