@@ -2,7 +2,7 @@
 // @id             iitc-plugin-portalsinpolygons@hayeswise
 // @name           IITC plugin: Portals-in-Polygons
 // @category       Layer
-// @version        0.2017.01.04
+// @version        0.2017.01.06
 // @namespace      https://github.com/hayeswise/iitc-wise-portalsinpolygon
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
 // @updateURL      https://raw.githubusercontent.com/hayeswise/iitc-wise-portalsinpolygon/master/wise-portalsinpolygons.user.js
@@ -27,18 +27,18 @@
  * Dan Sunday's Winding Number and isLeft C++ implementation - http://geomalgorithms.com/.
  *   Copyright and License: http://geomalgorithms.com/a03-_inclusion.html
  */
- /**
+/**
   * The IITC map object (a Leaflet map).
   * @external "window.map"
   * @see {@link https://iitc.me/ Ingress Intel Total Conversion}
   */
- /**
+/**
   * The IITC portals object (used as a map) that contains a list of the cached
   * portal information for the portals in the current and surrounding view.
   * @external "window.portals"
   * @see {@link https://iitc.me/ Ingress Intel Total Conversion}
   */
- /**
+/**
   * The map data render class which handles rendering into Leaflet the JSON data from the servers.  Needed to access
   * `window.Render.prototype.bringPortalsToFront`.
   * @external "window.Render"
@@ -66,11 +66,12 @@
  * @see {@link http://leafletjs.com/ Leaflet} documentation for further information.
  */
 
+
 /**
  * Tests if a point is left|on|right of an infinite line.
- * <br>
- * This is a JavaScript and Leaflet port of the isLeft C++ function by Dan Sunday.
- * @lends L.LatLng#
+ * <br><br>
+ * This is a JavaScript and Leaflet port of the `isLeft()` C++ function by Dan Sunday.
+ * @function external:"L.LatLng"#isLeft
  * @param {LatLng} p1 Point The reference line is defined by `this` LatLng to p1.
  * @param {LatLng} p2 The point in question.
  * @return >0 for p2 left of the line through this point and p1,
@@ -90,10 +91,11 @@ L.LatLng.prototype.isLeft = function (p1, p2) {
  * extends L.Polyline we can use the same method for both.  Although, for
  * L.Polyline, we only get points on the line even if a collection of lines
  * appear to make a polygon.
- *
- * This is a JavaScript and Leaflet port of the wn_PnPoly C++ function by Dan Sunday.
+ * <br><br>
+ * This is a JavaScript and Leaflet port of the `wn_PnPoly()` C++ function by Dan Sunday.
  * Unlike the C++ version, this implementation does include points on the line and vertices.
  *
+ * @function external:"L.Polyline"#getWindingNumber
  * @param p {L.LatLng} A point.
  * @retuns {Number} The winding number (=0 only when the point is outside)
  *
@@ -106,19 +108,19 @@ L.Polyline.prototype.getWindingNumber = function (p) { // Note that L.Polygon ex
         n,
         vertices,
         wn; // the winding number counter
-	vertices = this.getLatLngs().filter(function (v, i, array) {
-		if (i > 0 && v.lat === array[i-1].lat && v.lng === array[i-1].lng) { // Intenionally not using L.LatLng.equals since equals() allows for small margin of error.
-			return false;
-		} else {
-			return true;
-		}
-	});
+    vertices = this.getLatLngs().filter(function (v, i, array) {
+        if (i > 0 && v.lat === array[i-1].lat && v.lng === array[i-1].lng) { // Intenionally not using L.LatLng.equals since equals() allows for small margin of error.
+            return false;
+        } else {
+            return true;
+        }
+    });
     n = vertices.length;
     // Note that per the algorithm, the vertices (V) must be "a vertex points of a polygon V[n+1] with V[n]=V[0]"
     if (n > 0 && !vertices[n-1].equals(vertices[0])) {
         vertices.push(vertices[0]);
     }
-	n = vertices.length - 1;
+    n = vertices.length - 1;
     wn = 0;
     for (i=0; i < n; i++) {
         isLeftTest = vertices[i].isLeft(vertices[i+1], p);
@@ -175,7 +177,7 @@ L.Polyline.prototype.portalsIn = function () {
             console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6, wn].join(","));
             if (wn !== 0) {
                 //containedPortals.push(portal);
-				containedPortals[portal.options.guid] = portal;
+                containedPortals[portal.options.guid] = portal;
             }
         }
     }
@@ -226,7 +228,7 @@ function wrapper(plugin_info) {
     //plugin_info.dateTimeVersion = '20161003.4740';
     //plugin_info.pluginId = 'someid';
     //END PLUGIN AUTHORS NOTE
-	/**
+    /**
 	 * Portals-in-Polygon IITC plugin.  The plugin and its members can be accessed via
 	 * `window.plugin.portalsinpolygons`.  The "public" members are documented as module members while the more
 	 * friend and private members are documented as part of the `wrapper` function.
@@ -234,15 +236,15 @@ function wrapper(plugin_info) {
 	 * @module {function} portalsinpolygon
 	 */
     window.plugin.portalsinpolygons = function () {};
-	/**
+    /**
 	 * Portals-in-Polygon namespace.  `portalsinpolygon` is set to `window.plugin.portalsinpolygons`.
 	 * @namespace
 	 */
-	var portalsinpolygons = window.plugin.portalsinpolygons;
+    var portalsinpolygons = window.plugin.portalsinpolygons;
     var namespace = "plugin.portalsinpolygons";
     // Configuration
     portalsinpolygons.title = "Portals-in-Polygon";
-	/**
+    /**
 	 * An array of objects describing the required plugins.  Each object has
 	 * has the properties `object` and `name`.  The `name` value appears in
 	 * messaging if there are missing plugins.
@@ -255,24 +257,24 @@ function wrapper(plugin_info) {
         object: window.plugin.portalslist,
         name: "show list of portals"
     }];
-	/**
+    /**
 	 * Used when calling `window.isLayerGroupDisplayed(<String> name)`. E.g.,
 	 * `window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level])`.
 	 */
-	portalsinpolygons.layerChooserName = {
-		0: "Unclaimed Portals",
-		1: "Level 1 Portals",
-		2: "Level 2 Portals",
-		3: "Level 3 Portals",
-		4: "Level 4 Portals",
-		5: "Level 5 Portals",
-		6: "Level 6 Portals",
-		7: "Level 7 Portals",
-		8: "Level 8 Portals",
-		Resistance: "Resistance",
-		Enlightened: "Enlightened",
-		Neutral: "Unclaimed Portals"
-	};
+    portalsinpolygons.layerChooserName = {
+        0: "Unclaimed Portals",
+        1: "Level 1 Portals",
+        2: "Level 2 Portals",
+        3: "Level 3 Portals",
+        4: "Level 4 Portals",
+        5: "Level 5 Portals",
+        6: "Level 6 Portals",
+        7: "Level 7 Portals",
+        8: "Level 8 Portals",
+        Resistance: "Resistance",
+        Enlightened: "Enlightened",
+        Neutral: "Unclaimed Portals"
+    };
 
     /**
 	 * Bring portals to the front of the draw layers so that you can click on
@@ -287,7 +289,7 @@ function wrapper(plugin_info) {
         window.Render.prototype.bringPortalsToFront(); // See IITC code
     };
 
-	 /**
+    /**
 	 * A getPortalsCallback function returns returns an associative array of IITC portals (typically a subset
 	 * of `window.portals`).
 	 *
@@ -310,45 +312,47 @@ function wrapper(plugin_info) {
 	 * "Portal list".
 	 */
     portalsinpolygons.displayPortals = function (getPortalsFn, title) {
-		var fname = namespace + ".displayPortals";
+        var fname = namespace + ".displayPortals";
         var formattedPortals,
-			guids,
-			list,
-			msg,
-			portals,
-			type;
-		// Check parameters.
-		type = typeof getPortalsFn;
-		if (type !== 'function') {
-			if (type === 'undefined') {
-				getPortalsFn = portalsinpolygons.getPortalsInMapBounds;
+            list,
+            msg,
+            portals,
+            type;
+        // Check parameters.
+        type = typeof getPortalsFn;
+        if (type !== 'function') {
+            if (type === 'undefined') {
+                getPortalsFn = portalsinpolygons.getPortalsInMapBounds;
+            } else {
+                msg = "Unexpected parameter type, '" + type + "', for function " + fname + ", parameter getPortalsFn.";
+                throw new TypeError (msg, plugin_info.name);
+            }
+        }
+        title = (typeof title === 'undefined' ? "Portal list" : title);
+
+		if (!portalsinpolygons.mapZoomHasPortals()) {
+			list = $('<table class="noPortals"><tr><td>Please zoom to get additional portal data like the portal title.</td></tr></table>');
+		} else {
+			// plugins (e.g. bookmarks) can insert fields before the standard ones - so we need to search for the 'level' column
+			window.plugin.portalslist.sortBy = window.plugin.portalslist.fields.map(function (f) {
+				return f.title;
+			}).indexOf('Level');
+			window.plugin.portalslist.sortOrder = -1;
+			window.plugin.portalslist.enlP = 0;
+			window.plugin.portalslist.resP = 0;
+			window.plugin.portalslist.neuP = 0;
+			window.plugin.portalslist.filter = 0;
+
+			// Get portals and format them for display.
+			portals = getPortalsFn.call(this);
+			formattedPortals = portalsinpolygons.formattedPortalList(portals);
+			if (formattedPortals.length > 0) {
+				list = window.plugin.portalslist.portalTable(window.plugin.portalslist.sortBy, window.plugin.portalslist.sortOrder, window.plugin.portalslist.filter);
 			} else {
-				msg = "Unexpected parameter type, '" + type + "', for function " + fname + ", parameter getPortalsFn.";
-				throw new TypeError (msg, plugin_info.name);
+				list = $('<table class="noPortals"><tr><td>Nothing to show!</td></tr></table>');
 			}
 		}
-		title = (typeof title === 'undefined' ? "Portal list" : title);
-
-        // plugins (e.g. bookmarks) can insert fields before the standard ones - so we need to search for the 'level' column
-        window.plugin.portalslist.sortBy = window.plugin.portalslist.fields.map(function (f) {
-            return f.title;
-        }).indexOf('Level');
-        window.plugin.portalslist.sortOrder = -1;
-        window.plugin.portalslist.enlP = 0;
-        window.plugin.portalslist.resP = 0;
-        window.plugin.portalslist.neuP = 0;
-        window.plugin.portalslist.filter = 0;
-
-		// Get portals and format them for display.
-        portals = getPortalsFn.call(this);
-		formattedPortals = portalsinpolygons.formattedPortalList(portals);
-		guids = Object.keys(formattedPortals);
-        if (guids.length > 0) {
-            list = window.plugin.portalslist.portalTable(window.plugin.portalslist.sortBy, window.plugin.portalslist.sortOrder, window.plugin.portalslist.filter);
-        } else {
-            list = $('<table class="noPortals"><tr><td>Nothing to show!</td></tr></table>');
-        }
-		// Display table of portals.
+        // Display table of portals.
         if (window.useAndroidPanes()) {
             $('<div id="portalslist" class="mobile">').append(list).appendTo(document.body);
         } else {
@@ -362,15 +366,15 @@ function wrapper(plugin_info) {
         }
     };
 
-	/**
+    /**
 	 * Displays the portals contain in, and on the perimeter, of drawn polygons
 	 * and on any lines.
 	 * @global
 	 * @name window.plugin.portalsinpolygons.displayContainedPortals
 	 */
-	portalsinpolygons.displayContainedPortals = function () {
-		portalsinpolygons.displayPortals(portalsinpolygons.getContainedPortals, "Portals-in-Polygons");
-	};
+    portalsinpolygons.displayContainedPortals = function () {
+        portalsinpolygons.displayPortals(portalsinpolygons.getContainedPortals, "Portals-in-Polygons");
+    };
 
     /**
 	 * Gets and formats the portal information that will be used in the portal list display.
@@ -378,29 +382,21 @@ function wrapper(plugin_info) {
 	 * This function is based on a modified version of the
 	 * `window.plugin.portalslist.getPortals` function.
 	 * @param {Object} portals An associative array of IITC portals.
-	 * @param {Array} guids [Optional] An array of guids for getting portals from the portals object.
-	 *    If not provided, the guids will be obtained from the portals object.
-	 * @returns {true|false} Returns true if there are one or more portals;
-	 * 	otherwise, returns false.
+	 * @returns {Array<{portal:{Object}, values:{Array}, sortValues:{Array}>} Returns an array of
+	 *	formatted portals.
 	 */
-    portalsinpolygons.formattedPortalList = function formattedPortalList(portals, guids) {
+    portalsinpolygons.formattedPortalList = function (portals) {
         //filter : 0 = All, 1 = Neutral, 2 = Res, 3 = Enl, -x = all but x
-		var fname = namespace + "formattedPortalList";
-		var msg,
+        var fname = namespace + "formattedPortalList";
+        var msg,
             portalList = [];
-		guids = (typeof guids !== 'undefined') ? guids : Object.keys(portals);
-		if (typeof guids === 'undefined') {
-			guids = Object.keys(portals);
-		} else if (Object.prototype.toString.call(guids) !== '[object Array]') {
-			msg = "Unexpected parameter type, '" + typeof guids + "', for function " + fname + ", parameter guids.";
-			throw new TypeError (msg, plugin_info.name);
-		}
-		console.log ("---");
+        guids = Object.keys(portals);
+        console.log ("---");
         console.log(["Index","Title","GUID","Lng(X)","Lat(Y)"].join(","));
 
         guids.forEach(function (guid, i, array) {
-			var portal = portals[guid];
-			console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6].join(","));
+            var portal = portals[guid];
+            console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6].join(","));
             switch (portal.options.team) {
                 case window.TEAM_RES:
                     window.plugin.portalslist.resP++;
@@ -430,9 +426,12 @@ function wrapper(plugin_info) {
                 cell = row.insertCell(-1);
 
                 var value = field.value(portal);
+				if (typeof value === 'undefined') {
+					value = "[unknown]";
+				}
                 obj.values.push(value);
 
-                obj.sortValues.push(field.sortValue ? field.sortValue(value, portal) : value);
+                obj.sortValues.push(field.sortValue && !!value ? field.sortValue(value, portal) : value);
 
                 if (field.format) {
                     field.format(cell, portal, value);
@@ -443,8 +442,8 @@ function wrapper(plugin_info) {
 
             portalList.push(obj);
         });
-		console.log ("---");
-		window.plugin.portalslist.listPortals = portalList;
+        console.log ("---");
+        window.plugin.portalslist.listPortals = portalList;
         return portalList;
     };
 
@@ -473,22 +472,22 @@ function wrapper(plugin_info) {
             layers, // Leaflet Layer[]
             type,
             portals;
-		// Check parameter
-		type = typeof keepPortalFn;
-		if (type !== 'function') {
-			if (type === 'undefined') {
-				keepPortalFn = portalsinpolygons.isPortalDisplayed;
-			} else if (!keepPortalFn) {
-				keepPortalFn = function (portal) {return true;};
-			} else {
-				keepPortalFn = portalsinpolygons.isPortalDisplayed;
-			}
-		}
-		// Loop through all map elements looking for polygons and circles (and in the future polylines).
+        // Check parameter
+        type = typeof keepPortalFn;
+        if (type !== 'function') {
+            if (type === 'undefined') {
+                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+            } else if (!keepPortalFn) {
+                keepPortalFn = function (portal) {return true;};
+            } else {
+                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+            }
+        }
+        // Loop through all map elements looking for polygons and circles (and in the future polylines).
         layers = window.plugin.drawTools.drawnItems.getLayers();
         console.log(fname + ": layers.length=" + layers.length);
         enclosures = layers.filter(function(layer, i, array) {
-			return (layer instanceof L.Polygon || layer instanceof L.Polyline);
+            return (layer instanceof L.Polygon || layer instanceof L.Polyline);
         });
 
         portals = enclosures.reduce(function(collectedPortals, layer, currentIndex, array){
@@ -502,7 +501,7 @@ function wrapper(plugin_info) {
             // end debug
             morePortals = (typeof layer.portalsIn === 'function') ? layer.portalsIn() : {};
             //return collectedPortals.concat(morePortals);
-			return jQuery.extend(collectedPortals, morePortals);
+            return jQuery.extend(collectedPortals, morePortals);
         }, Object.create(null));
         // start debug
         console.log(fname + ": Number of enclosures: " + enclosures.length);
@@ -513,13 +512,13 @@ function wrapper(plugin_info) {
         });
         console.log ("---");
         // end debug
-		// Filter out unwanted portals
-		portals = Object.keys(portals).reduce(function(collectedPortals, guid, currentIndex, array) {
-			var portal = portals[guid];
-			if (keepPortalFn(portal)) {
-				collectedPortals[portal.options.guid] = portal;
-			}
-			return collectedPortals;
+        // Filter out unwanted portals
+        portals = Object.keys(portals).reduce(function(collectedPortals, guid, currentIndex, array) {
+            var portal = portals[guid];
+            if (keepPortalFn(portal)) {
+                collectedPortals[portal.options.guid] = portal;
+            }
+            return collectedPortals;
         }, Object.create(null));
         console.log (fname + ": End");
         return portals;
@@ -550,28 +549,28 @@ function wrapper(plugin_info) {
         }
     };
 
-	/**
+    /**
 	 * Returns a set of guids belonging to the portals filtered by the layer group selections of
 	 * "Unclaimed Portals", "Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
 	 * @param {Object} portals An associative array of IITC portal objects.
 	 * @returns {string[]} An array of portal guids.
 	 */
-	 portalsinpolygons.getPortalGuidsFilteredByLayerGroup = function (portals) {
-	 	var guids;
-	 	guids = Object.keys(portals);
-	 	guids = guids.filter(function (guid, i, array) {
-	 			var keep;
-	 			var portal = portals[guid];
-	 			keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level]) &&
-	 				((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
-	 					(portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
-	 					(portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
-	 			return keep;
-	 		});
-	 	return guids;
-	 };
+    portalsinpolygons.getPortalGuidsFilteredByLayerGroup = function (portals) {
+        var guids;
+        guids = Object.keys(portals);
+        guids = guids.filter(function (guid, i, array) {
+            var keep;
+            var portal = portals[guid];
+            keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level]) &&
+                    ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
+                     (portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
+                     (portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
+            return keep;
+        });
+        return guids;
+    };
 
-	 /**
+    /**
 	 * A keepPortalCallback function returns true if the the provided portal passes the test implemented by the
 	 * callback function.  The callback is used to determine if the portal should be displayed in the list of portals.
 	 *
@@ -581,7 +580,7 @@ function wrapper(plugin_info) {
 	 * @see {@link getPortalsInMapBounds}
      */
 
-	/**
+    /**
 	 * Returns the portals within the displayed map boundaries.
 	 * @global
 	 * @name window.plugin.portalsinpolygons.getPortalsInMapBounds
@@ -593,56 +592,59 @@ function wrapper(plugin_info) {
 	 *	"Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
 	 * @returns {Object} An associative array of IITC portal objects (a subset of `window.portals`).
 	 */
-	portalsinpolygons.getPortalsInMapBounds = function (keepPortalFn) {
-		var displayBounds,
-			type,
-			boundedPortals;
-		// Check parameter
-		type = typeof keepPortalFn;
-		if (type !== 'function') {
-			if (type === 'undefined') {
-				keepPortalFn = portalsinpolygons.isPortalDisplayed;
-			} else if (!keepPortalFn) {
-				keepPortalFn = function (portal) {return true;};
-			} else {
-				keepPortalFn = portalsinpolygons.isPortalDisplayed;
-			}
-		}
-		displayBounds = window.map.getBounds();
-		boundedPortals = Object.keys(window.portals).reduce(function (collectedPortals, guid, currentIndex, array) {
-			var portal;
-			portal = window.portals[guid];
-			if (displayBounds.contains(portal.getLatLng()) && keepPortalFn(portal)) {
-				collectedPortals[guid] = portal;
-			}
-			return collectedPortals;
-		}, Object.create(null));
-		return boundedPortals;
-	};
+    portalsinpolygons.getPortalsInMapBounds = function (keepPortalFn) {
+        var displayBounds,
+            type,
+            boundedPortals;
+        // Check parameter
+        type = typeof keepPortalFn;
+        if (type !== 'function') {
+            if (type === 'undefined') {
+                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+            } else if (!keepPortalFn) {
+                keepPortalFn = function (portal) {return true;};
+            } else {
+                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+            }
+        }
+        displayBounds = window.map.getBounds();
 
-	/**
+        boundedPortals = Object.keys(window.portals).reduce(function (collectedPortals, guid, currentIndex, array) {
+            var portal;
+            portal = window.portals[guid];
+//			var exp = {latLng: portal.getLatLng(), contains: displayBounds.contains(portal.getLatLng()), keep:keepPortalFn(portal)};
+//			console.log("exp="+JSON.stringify(exp));
+            if (displayBounds.contains(portal.getLatLng()) && keepPortalFn(portal)) {
+                collectedPortals[guid] = portal;
+            }
+            return collectedPortals;
+        }, Object.create(null));
+        return boundedPortals;
+    };
+
+    /**
 	 * Returns the DOM elements containing the plugin controls to be appended to the IITC toolbox.
 	 * <br>
 	 * Intentioinally public to allow friendly plugins the ability to group and hide controls.
 	 * @returns {Object} DOM elements.
 	 */
-	portalsinpolygons.getToolboxControls = function () {
-		var	dom,
-			id,
-			html,
-			portalsToFrontControl,
-			displayPortalsControl,
+    portalsinpolygons.getToolboxControls = function () {
+        var	dom,
+            id,
+            html,
+            portalsToFrontControl,
+            displayPortalsControl,
             listPortalsInPolygonControl;
         portalsToFrontControl = '<span style="white-space:nowrap"><a id="portalsinpolygonPortalsToFront" onclick="window.plugin.portalsinpolygons.bringPortalsToFront();false;" title="Bring portals to the front draw layer so that you can click on them after drawing a circle or polygon over them.">Portals To Front</a></span>';
         listPortalsInPolygonControl = '<span style="white-space:nowrap"><a id="portalsinpolygonListPortals" onclick="window.plugin.portalsinpolygons.displayContainedPortals();false;" title="Display a list of portals in polygons, circles, and on lines.  Use the layer group check boxes to filter the portals.">Portals in Polygons</a></span>';
         displayPortalsControl = '<span style="white-space:nowrap"><a id="portalsinpolygonListPortals" onclick="window.plugin.portalsinpolygons.displayPortals();false;" title="Display a list of portals.">Portals on Map</a></span>';
- 		html = '<div style="color:#00C5FF;text-align:center;width:fit-content\;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;">' +
-			 listPortalsInPolygonControl + '&nbsp;&nbsp; ' + displayPortalsControl + '&nbsp;&nbsp; ' + portalsToFrontControl + 
-			'</div>';
-		dom = jQuery(html);
-		dom.attr("id", namespace + ".controls");
-		return (dom);
-	};
+        html = '<div style="color:#00C5FF;text-align:center;width:fit-content\;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;">' +
+            listPortalsInPolygonControl + '&nbsp;&nbsp; ' + displayPortalsControl + '&nbsp;&nbsp; ' + portalsToFrontControl +
+            '</div>';
+        dom = jQuery(html);
+        dom.attr("id", namespace + ".controls");
+        return (dom);
+    };
 
     /**
 	 * Returns the portal if it is displayed based on the the layer group selections of "Unclaimed Portals",
@@ -651,55 +653,42 @@ function wrapper(plugin_info) {
 	 * @param {Object} portal An IITC portal object.
 	 * @returns {(Object|null)} The IITC portal object or null.
 	 */
-	 portalsinpolygons.isPortalDisplayed = function (portal) {
-	 	var keep;
-	 	keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level]) &&
-	 		((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
-	 			(portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
-	 			(portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
-	 	return keep;
-	 };
-
-    /**
-	 * Lists out portals in polygons and circles.
-	 */
-    portalsinpolygons.listContainedPortals = function () {
-        var fname = namespace + ".listContainedPortals";
-        console.log (fname + ": Start");
-        var containedPortals;
-
-        containedPortals = portalsinpolygons.getContainedPortals();
-
-        console.log(fname + ": Number of contained portals: " + containedPortals.length);
-        console.log ("---");
-        console.log(["Index","Title","GUID","Lng(X)","Lat(Y)"].join(","));
-        containedPortals.forEach(function(portal, i, array) {
-            console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6].join(","));
-        });
-        console.log ("---");
-        localStorage['plugin-portalsinpolygon-portals'] = JSON.stringify(containedPortals.redu(function(portal, i, array) {
-            return {guid: portal.options.guid,
-                    title: portal.options.data.title};
-        })); // hope this works!
-        //var csvHeader = "name,type,lat,lng\n";
-        //localStorage['plugin-portalsinpolygon-debug-csv'] = csvHeader + ""
-        console.log (fname + ": End");
-        return containedPortals.length > 0;
+    portalsinpolygons.isPortalDisplayed = function (portal) {
+        var keep;
+        keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.level]) &&
+                ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
+                 (portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
+                 (portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
+        return keep;
     };
+
+	/**
+	 * Checks if there is sufficient portal data for the current map zoom.  When the zoom is set very far,
+     * `window.portals` will only contain placeholder data and may not contain the portal title and other
+	 * information.
+	 * @todo it might be easier to check if one of the portals has the data your are looking for (e.g., check if portal.options.data.title exists).
+	 * @returns {boolean} True if there is sufficient portal data; otherwise, returns false.
+	 */
+	portalsinpolygons.mapZoomHasPortals = function() {
+	  var zoom = map.getZoom();
+	  zoom = getDataZoomForMapZoom(zoom);
+	  var tileParams = getMapZoomTileParameters(zoom);
+	  return tileParams.hasPortals;
+	};
 
     /**
 	 * Checks if the pre-requisite plugins are installed.  If not, displays an alert.
 	 * @returns {boolean}
 	 */
     portalsinpolygons.prerequisitePluginsInstalled = function () {
-		var fname = namespace + ".prerequisitePluginsInstalled";
+        var fname = namespace + ".prerequisitePluginsInstalled";
         var missing = [];
         var msg;
-		console.log (fname + ": Start");
+        console.log (fname + ": Start");
         portalsinpolygons.requiredPlugins.forEach(function(plugin) {
             if (plugin.object === undefined) {
                 missing.push('"' + plugin.name + '"');
-			}
+            }
         });
         if (missing.length > 0) {
             msg = 'IITC plugin "Portals-in-Polygon" requires IITC plugin' + ((missing.length === 1) ? ' ' : 's ') +
@@ -707,7 +696,7 @@ function wrapper(plugin_info) {
             console.warn(msg);
             alert(msg);
         }
-		console.log (fname + ": End");
+        console.log (fname + ": End");
         return (missing.length === 0);
     };
 
@@ -716,13 +705,13 @@ function wrapper(plugin_info) {
      */
     portalsinpolygons.setup = function init() { // If your setup is named something else, change the assignment in var setup = ... below.
         var fname = namespace + ".setup";
-		var controls;
+        var controls;
         console.log (fname + ": Start");
         if (!portalsinpolygons.prerequisitePluginsInstalled()) {
             return;
         }
         // Add controls to IITC right hand side toolbox.
-		controls = portalsinpolygons.getToolboxControls();
+        controls = portalsinpolygons.getToolboxControls();
         $("#toolbox").append(controls);
 
         // Delete setup function so that it is not run again.
@@ -751,7 +740,7 @@ function wrapper(plugin_info) {
 //
 // 1.  Get info from Tampermonkey/Greasemonkey related headers.
 var info = {};
- /**
+/**
   * Greasemonkey object containing information about the script.
   * @external "GM_info"
   * @see {@link http://www.greasespot.net/ Greasemonkey}
