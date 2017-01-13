@@ -6,6 +6,9 @@
 <code>window.plugin.portalsinpolygons</code>.  The &quot;public&quot; members are documented as module members while the more
 friend and private members are documented as part of the <code>wrapper</code> function.</p>
 </dd>
+<dt><a href="#module_ToolboxControlSection">ToolboxControlSection</a></dt>
+<dd><p>ToolboxControlSection - a standardized approach for...</p>
+</dd>
 </dl>
 
 ## Members
@@ -80,22 +83,18 @@ L.GeodesicPolygon and L.GeodesicCircle extend L.Polygon.</p>
 <a name="module_portalsinpolygon"></a>
 
 ## portalsinpolygon : <code>function</code>
-Portals-in-Polygon IITC plugin.  The plugin and its members can be accessed via
-`window.plugin.portalsinpolygons`.  The "public" members are documented as module members while the more
-friend and private members are documented as part of the `wrapper` function.
+Portals-in-Polygon IITC plugin.  The plugin and its members can be accessed via`window.plugin.portalsinpolygons`.  The "public" members are documented as module members while the morefriend and private members are documented as part of the `wrapper` function.
 
 **See**: [wrapper](#wrapper)  
 
 * [portalsinpolygon](#module_portalsinpolygon) : <code>function</code>
     * [~getPortalsCallback](#module_portalsinpolygon..getPortalsCallback) ⇒ <code>Object</code>
     * [~keepPortalCallback](#module_portalsinpolygon..keepPortalCallback) ⇒ <code>boolean</code>
-    * [~GM_info](#external_GM_info)
 
 <a name="module_portalsinpolygon..getPortalsCallback"></a>
 
 ### portalsinpolygon~getPortalsCallback ⇒ <code>Object</code>
-A getPortalsCallback function returns returns an associative array of IITC portals (typically a subset
-of `window.portals`).
+A getPortalsCallback function returns returns an associative array of IITC portals (typically a subsetof `window.portals`).
 
 **Kind**: inner typedef of <code>[portalsinpolygon](#module_portalsinpolygon)</code>  
 **Returns**: <code>Object</code> - An associative array of IITC portals.  
@@ -107,8 +106,7 @@ of `window.portals`).
 <a name="module_portalsinpolygon..keepPortalCallback"></a>
 
 ### portalsinpolygon~keepPortalCallback ⇒ <code>boolean</code>
-A keepPortalCallback function returns true if the the provided portal passes the test implemented by the
-callback function.  The callback is used to determine if the portal should be displayed in the list of portals.
+A keepPortalCallback function returns true if the the provided portal passes the test implemented by thecallback function.  The callback is used to determine if the portal should be displayed in the list of portals.
 
 **Kind**: inner typedef of <code>[portalsinpolygon](#module_portalsinpolygon)</code>  
 **Returns**: <code>boolean</code> - True if the portal should be kept.  False if the portal should be ignored.  
@@ -118,29 +116,72 @@ callback function.  The callback is used to determine if the portal should be di
 | --- | --- | --- |
 | portal | <code>Object</code> | An IITC portal object. |
 
+<a name="module_ToolboxControlSection"></a>
+
+## ToolboxControlSection
+ToolboxControlSection - a standardized approach for...
+
+**See**: [wrapper](#wrapper)  
+
+* [ToolboxControlSection](#module_ToolboxControlSection)
+    * [~ToolboxControlSection](#module_ToolboxControlSection..ToolboxControlSection)
+        * [new ToolboxControlSection(content, controlSectionClass, [controlClass])](#new_module_ToolboxControlSection..ToolboxControlSection_new)
+        * [.mergeWithFamily()](#module_ToolboxControlSection..ToolboxControlSection+mergeWithFamily)
+        * [.valueOf()](#module_ToolboxControlSection..ToolboxControlSection+valueOf) ⇒ <code>Object</code>
+    * [~GM_info](#external_GM_info)
+
+<a name="module_ToolboxControlSection..ToolboxControlSection"></a>
+
+### ToolboxControlSection~ToolboxControlSection
+**Kind**: inner class of <code>[ToolboxControlSection](#module_ToolboxControlSection)</code>  
+
+* [~ToolboxControlSection](#module_ToolboxControlSection..ToolboxControlSection)
+    * [new ToolboxControlSection(content, controlSectionClass, [controlClass])](#new_module_ToolboxControlSection..ToolboxControlSection_new)
+    * [.mergeWithFamily()](#module_ToolboxControlSection..ToolboxControlSection+mergeWithFamily)
+    * [.valueOf()](#module_ToolboxControlSection..ToolboxControlSection+valueOf) ⇒ <code>Object</code>
+
+<a name="new_module_ToolboxControlSection..ToolboxControlSection_new"></a>
+
+#### new ToolboxControlSection(content, controlSectionClass, [controlClass])
+Creates a new ToolboxControlSection.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| content | <code>String</code> &#124; <code>Element</code> &#124; <code>Text</code> &#124; <code>Array</code> &#124; <code>jQuery</code> | A object suitable for passing to `jQuery.append()`: a  	DOM element, text node, array of elements and text nodes, HTML string, or jQuery object to insert at the end of 	each element in the set of matched elements. |
+| controlSectionClass | <code>String</code> | The class name for a section of controls, typically in a `div` tag. |
+| [controlClass] | <code>String</code> | An optional class name of a simple control or collection of controls. |
+
+<a name="module_ToolboxControlSection..ToolboxControlSection+mergeWithFamily"></a>
+
+#### toolboxControlSection.mergeWithFamily()
+Appends toolbox controls with the same toolbox control section class and toolbox control class.
+
+**Kind**: instance method of <code>[ToolboxControlSection](#module_ToolboxControlSection..ToolboxControlSection)</code>  
+<a name="module_ToolboxControlSection..ToolboxControlSection+valueOf"></a>
+
+#### toolboxControlSection.valueOf() ⇒ <code>Object</code>
+Override valueOf so that we get the desired behavior of getting the jQuery object when we access an object directly.  For example,```$("#toolbox").append(new ToolboxControlSection(html, "myfamily-control-section", "myfamily-control").mergeWithFamily();```
+
+**Kind**: instance method of <code>[ToolboxControlSection](#module_ToolboxControlSection..ToolboxControlSection)</code>  
+**Returns**: <code>Object</code> - jQuery object.  
 <a name="external_GM_info"></a>
 
-### portalsinpolygon~GM_info
+### ToolboxControlSection~GM_info
 Greasemonkey object containing information about the script.
 
-**Kind**: inner external of <code>[portalsinpolygon](#module_portalsinpolygon)</code>  
+**Kind**: inner external of <code>[ToolboxControlSection](#module_ToolboxControlSection)</code>  
 **See**: [Greasemonkey](http://www.greasespot.net/)  
 <a name="bringPortalsToFront"></a>
 
 ## bringPortalsToFront
-Bring portals to the front of the draw layers so that you can click on
-them after drawing a circle or polygon over the portals.
-<br>
-Thanks to Zaso's "Bring Portals To Front" at
-<a href="http://www.giacintogarcea.com/ingress/iitc/bring-portals-to-front-by-zaso.meta.js"> Zaso Items</a>.
+Bring portals to the front of the draw layers so that you can click onthem after drawing a circle or polygon over the portals.<br>Thanks to Zaso's "Bring Portals To Front" at<a href="http://www.giacintogarcea.com/ingress/iitc/bring-portals-to-front-by-zaso.meta.js"> Zaso Items</a>.
 
 **Kind**: global variable  
 <a name="displayPortals"></a>
 
 ## displayPortals
-Displays portals.  The portals are filtered based on selections in the layer chooser.
-<br>
-This function is generalized version of the `window.plugin.portalslist.displayPL` function.
+Displays portals.  The portals are filtered based on selections in the layer chooser.<br>This function is generalized version of the `window.plugin.portalslist.displayPL` function.
 
 **Kind**: global variable  
 
@@ -152,17 +193,13 @@ This function is generalized version of the `window.plugin.portalslist.displayPL
 <a name="displayContainedPortals"></a>
 
 ## displayContainedPortals
-Displays the portals contain in, and on the perimeter, of drawn polygons
-and on any lines.
+Displays the portals contain in, and on the perimeter, of drawn polygonsand on any lines.
 
 **Kind**: global variable  
 <a name="getContainedPortals"></a>
 
 ## getContainedPortals ⇒ <code>Object</code>
-Returns an array of IITC portals contained in the polygons and circles
-drawn on the map.<br>
-Checks for layers of type L.Polygon, which includes L.GeodesicPolygon
-and L.GeodesicCircle, and L.Polyline, which in L.GeodesicPolyline.
+Returns an array of IITC portals contained in the polygons and circlesdrawn on the map.<br>Checks for layers of type L.Polygon, which includes L.GeodesicPolygonand L.GeodesicCircle, and L.Polyline, which in L.GeodesicPolyline.
 
 **Kind**: global variable  
 **Returns**: <code>Object</code> - A collection of IITC portals.  
@@ -186,10 +223,7 @@ Returns the portals within the displayed map boundaries.
 <a name="wrapper"></a>
 
 ## wrapper(plugin_info)
-Closure function for Portals-in-Polygon.
-
-Standard IITC wrapper pattern used to create the plugin's closure when
-"installed" using `document.createElement("script".appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));`
+Closure function for Portals-in-Polygon.Standard IITC wrapper pattern used to create the plugin's closure when"installed" using `document.createElement("script".appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));`
 
 **Kind**: global function  
 
@@ -206,7 +240,7 @@ Standard IITC wrapper pattern used to create the plugin's closure when
     * [~portalsinpolygons](#wrapper..portalsinpolygons) : <code>object</code>
         * [.requiredPlugins](#wrapper..portalsinpolygons.requiredPlugins) : <code>Array</code>
         * [.layerChooserName](#wrapper..portalsinpolygons.layerChooserName)
-        * [.formattedPortalList(portals, guids)](#wrapper..portalsinpolygons.formattedPortalList) ⇒ <code>true</code> &#124; <code>false</code>
+        * [.formattedPortalList(portals)](#wrapper..portalsinpolygons.formattedPortalList) ⇒
         * [.getLayerClassName(layer)](#wrapper..portalsinpolygons.getLayerClassName) ⇒ <code>String</code>
         * [.getPortalGuidsFilteredByLayerGroup(portals)](#wrapper..portalsinpolygons.getPortalGuidsFilteredByLayerGroup) ⇒ <code>Array.&lt;string&gt;</code>
         * [.getToolboxControls()](#wrapper..portalsinpolygons.getToolboxControls) ⇒ <code>Object</code>
@@ -225,7 +259,7 @@ Portals-in-Polygon namespace.  `portalsinpolygon` is set to `window.plugin.porta
 * [~portalsinpolygons](#wrapper..portalsinpolygons) : <code>object</code>
     * [.requiredPlugins](#wrapper..portalsinpolygons.requiredPlugins) : <code>Array</code>
     * [.layerChooserName](#wrapper..portalsinpolygons.layerChooserName)
-    * [.formattedPortalList(portals, guids)](#wrapper..portalsinpolygons.formattedPortalList) ⇒ <code>true</code> &#124; <code>false</code>
+    * [.formattedPortalList(portals)](#wrapper..portalsinpolygons.formattedPortalList) ⇒
     * [.getLayerClassName(layer)](#wrapper..portalsinpolygons.getLayerClassName) ⇒ <code>String</code>
     * [.getPortalGuidsFilteredByLayerGroup(portals)](#wrapper..portalsinpolygons.getPortalGuidsFilteredByLayerGroup) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getToolboxControls()](#wrapper..portalsinpolygons.getToolboxControls) ⇒ <code>Object</code>
@@ -237,34 +271,26 @@ Portals-in-Polygon namespace.  `portalsinpolygon` is set to `window.plugin.porta
 <a name="wrapper..portalsinpolygons.requiredPlugins"></a>
 
 #### portalsinpolygons.requiredPlugins : <code>Array</code>
-An array of objects describing the required plugins.  Each object has
-has the properties `object` and `name`.  The `name` value appears in
-messaging if there are missing plugins.
+An array of objects describing the required plugins.  Each object hashas the properties `object` and `name`.  The `name` value appears inmessaging if there are missing plugins.
 
 **Kind**: static property of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
 <a name="wrapper..portalsinpolygons.layerChooserName"></a>
 
 #### portalsinpolygons.layerChooserName
-Used when calling `window.isLayerGroupDisplayed(<String> name)`. E.g.,
-`window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level])`.
+Used when calling `window.isLayerGroupDisplayed(<String> name)`. E.g.,`window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level])`.
 
 **Kind**: static property of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
 <a name="wrapper..portalsinpolygons.formattedPortalList"></a>
 
-#### portalsinpolygons.formattedPortalList(portals, guids) ⇒ <code>true</code> &#124; <code>false</code>
-Gets and formats the portal information that will be used in the portal list display.
-<br>
-This function is based on a modified version of the
-`window.plugin.portalslist.getPortals` function.
+#### portalsinpolygons.formattedPortalList(portals) ⇒
+Gets and formats the portal information that will be used in the portal list display.<br>This function is based on a modified version of the`window.plugin.portalslist.getPortals` function.
 
 **Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
-**Returns**: <code>true</code> &#124; <code>false</code> - Returns true if there are one or more portals;
-	otherwise, returns false.  
+**Returns**: {Array<{portal:{Object}, values:{Array}, sortValues:{Array}>} Returns an array of	formatted portals.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | portals | <code>Object</code> | An associative array of IITC portals. |
-| guids | <code>Array</code> | [Optional] An array of guids for getting portals from the portals object.    If not provided, the guids will be obtained from the portals object. |
 
 <a name="wrapper..portalsinpolygons.getLayerClassName"></a>
 
@@ -281,8 +307,7 @@ Returns a string representation of the layer class (e.g., "L.GeodesicPolygon" an
 <a name="wrapper..portalsinpolygons.getPortalGuidsFilteredByLayerGroup"></a>
 
 #### portalsinpolygons.getPortalGuidsFilteredByLayerGroup(portals) ⇒ <code>Array.&lt;string&gt;</code>
-Returns a set of guids belonging to the portals filtered by the layer group selections of
-"Unclaimed Portals", "Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
+Returns a set of guids belonging to the portals filtered by the layer group selections of"Unclaimed Portals", "Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
 
 **Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
 **Returns**: <code>Array.&lt;string&gt;</code> - An array of portal guids.  
@@ -294,18 +319,14 @@ Returns a set of guids belonging to the portals filtered by the layer group sele
 <a name="wrapper..portalsinpolygons.getToolboxControls"></a>
 
 #### portalsinpolygons.getToolboxControls() ⇒ <code>Object</code>
-Returns the DOM elements containing the plugin controls to be appended to the IITC toolbox.
-<br>
-Intentioinally public to allow friendly plugins the ability to group and hide controls.
+Returns the DOM elements containing the plugin controls to be appended to the IITC toolbox.<br>Controls from other plugins with class "wise-toolbox-control" or "wise-toolbox-control-section" will be groupedinto one subsection (same div tag).
 
 **Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
 **Returns**: <code>Object</code> - DOM elements.  
 <a name="wrapper..portalsinpolygons.isPortalDisplayed"></a>
 
 #### portalsinpolygons.isPortalDisplayed(portal) ⇒ <code>Object</code> &#124; <code>null</code>
-Returns the portal if it is displayed based on the the layer group selections of "Unclaimed Portals",
-"Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".  Returns null if it is not
-displayed.
+Returns the portal if it is displayed based on the the layer group selections of "Unclaimed Portals","Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".  Returns null if it is notdisplayed.
 
 **Kind**: static method of <code>[portalsinpolygons](#wrapper..portalsinpolygons)</code>  
 **Returns**: <code>Object</code> &#124; <code>null</code> - The IITC portal object or null.  
@@ -347,16 +368,14 @@ The IITC map object (a Leaflet map).
 <a name="external_window.portals"></a>
 
 ## window.portals
-The IITC portals object (used as a map) that contains a list of the cached
-portal information for the portals in the current and surrounding view.
+The IITC portals object (used as a map) that contains a list of the cachedportal information for the portals in the current and surrounding view.
 
 **Kind**: global external  
 **See**: [Ingress Intel Total Conversion](https://iitc.me/)  
 <a name="external_window.Render"></a>
 
 ## window.Render
-The map data render class which handles rendering into Leaflet the JSON data from the servers.  Needed to access
-`window.Render.prototype.bringPortalsToFront`.
+The map data render class which handles rendering into Leaflet the JSON data from the servers.  Needed to access`window.Render.prototype.bringPortalsToFront`.
 
 **Kind**: global external  
 **See**: [Ingress Intel Total Conversion](https://iitc.me/)  
@@ -374,6 +393,20 @@ The Leaflet LatLng class.
 
 **Kind**: global external  
 **See**: [Leaflet](http://leafletjs.com/) documentation for further information.  
+<a name="external_L.LatLng+isLeft"></a>
+
+### l.LatLng.isLeft(p1, p2) ⇒
+Tests if a point is left|on|right of an infinite line.<br><br>This is a JavaScript and Leaflet port of the `isLeft()` C++ function by Dan Sunday.
+
+**Kind**: instance method of <code>[L.LatLng](#external_L.LatLng)</code>  
+**Returns**: >0 for p2 left of the line through this point and p1,         =0 for p2 on the line,         <0 for p2 right of the line through this point an p1.  
+**See**: [Inclusion of a Point in a Polygon](http://geomalgorithms.com/a03-_inclusion.html) by Dan Sunday.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p1 | <code>LatLng</code> | Point The reference line is defined by `this` LatLng to p1. |
+| p2 | <code>LatLng</code> | The point in question. |
+
 <a name="external_L.Polyline"></a>
 
 ## L.Polyline
@@ -381,11 +414,27 @@ The Leaflet Polyline class.
 
 **Kind**: global external  
 **See**: [Leaflet](http://leafletjs.com/) documentation for further information.  
+<a name="external_L.Polyline+getWindingNumber"></a>
+
+### l.Polyline.getWindingNumber(p)
+Test for a point in a polygon or on the bounding lines of the polygon.  Thecoordinates (L.LatLngs) for a GeodesicPolygon are set to follow the earth'scurvature when the GeodesicPolygon object is created.  Since L.Polygonextends L.Polyline we can use the same method for both.  Although, forL.Polyline, we only get points on the line even if a collection of linesappear to make a polygon.<br><br>This is a JavaScript and Leaflet port of the `wn_PnPoly()` C++ function by Dan Sunday.Unlike the C++ version, this implementation does include points on the line and vertices.
+
+**Kind**: instance method of <code>[L.Polyline](#external_L.Polyline)</code>  
+**Retuns**: <code>Number</code> The winding number (=0 only when the point is outside)  
+**See**
+
+- [Inclusion of a Point in a Polygon](http://geomalgorithms.com/a03-_inclusion.html) by Dan Sunday.
+- [Leaflet.Geodesc](https://github.com/Fragger/Leaflet.Geodesic) for information about Leaflet.Geodesc by Fragger.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p | <code>L.LatLng</code> | A point. |
+
 <a name="external_L.Polygon"></a>
 
 ## L.Polygon
-The Leaflet Polygon class.
-L.GeodesicPolygon and L.GeodesicCircle extend L.Polygon.
+The Leaflet Polygon class.L.GeodesicPolygon and L.GeodesicCircle extend L.Polygon.
 
 **Kind**: global external  
 **See**: [Leaflet](http://leafletjs.com/) documentation for further information.  
