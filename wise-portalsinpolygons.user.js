@@ -2,7 +2,8 @@
 // @id             iitc-plugin-portalsinpolygons@hayeswise
 // @name           IITC plugin: Portals-in-Polygons
 // @category       Layer
-// @namespace      https://github.com/hayeswise/iitc-wise-portalsinpolygon
+// @version        1.2017.01.13
+// @namespace      https://github.com/hayeswise/iitc-portalsinpolygons
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
 // @updateURL      https://raw.githubusercontent.com/hayeswise/iitc-wise-portalsinpolygon/master/wise-portalsinpolygons.user.js
 // @downloadURL	   https://raw.githubusercontent.com/hayeswise/iitc-wise-portalsinpolygon/master/wise-portalsinpolygons.user.js
@@ -185,7 +186,6 @@ L.Polyline.prototype.portalsIn = function () {
     return containedPortals;
 };
 
-
 /**
  * Checks if a single point is contained in a polygon.
  * Note that L.GeodesicPolygons and L.GeodesicCircles are types of L.Polygon
@@ -215,6 +215,7 @@ L.Polygon.prototype.contains = function (p) {
  * @param {string} plugin_info.script.description GM_info.script.description.
  */
 function wrapper(plugin_info) {
+    'use strict';
     // Define the base plugin object if IITC is not already loaded.
 
     if (typeof window.plugin !== "function") {
@@ -240,14 +241,14 @@ function wrapper(plugin_info) {
 	 * @namespace
 	 */
     var portalsinpolygons = window.plugin.portalsinpolygons;
-    var namespace = "plugin.portalsinpolygons";
+    var namespace = "portalsinpolygons";
     // Configuration
     portalsinpolygons.title = "Portals-in-Polygon";
     /**
 	 * An array of objects describing the required plugins.  Each object has
 	 * has the properties `object` and `name`.  The `name` value appears in
 	 * messaging if there are missing plugins.
-	 * @type {Array}
+	 * @type {Array}<{object: Object, name: string}>
 	 */
     portalsinpolygons.requiredPlugins = [{
         object: window.plugin.drawTools,
@@ -256,6 +257,7 @@ function wrapper(plugin_info) {
         object: window.plugin.portalslist,
         name: "show list of portals"
     }];
+
     /**
 	 * Used when calling `window.isLayerGroupDisplayed(<String> name)`. E.g.,
 	 * `window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level])`.
@@ -628,25 +630,26 @@ function wrapper(plugin_info) {
     /**
 	 * Returns the DOM elements containing the plugin controls to be appended to the IITC toolbox.
 	 * <br>
-	 * Intentioinally public to allow friendly plugins the ability to group and hide controls.
+	 * Controls from other plugins with class "wise-toolbox-control" or "wise-toolbox-control-section" will be grouped
+	 * into one subsection (same div tag).
 	 * @returns {Object} DOM elements.
 	 */
     portalsinpolygons.getToolboxControls = function () {
-        var	dom,
-            id,
-            html,
+		var	controlsHtml,
+            pluginControl,
             portalsToFrontControl,
             displayPortalsControl,
             listPortalsInPolygonControl;
-        portalsToFrontControl = '<span style="white-space:nowrap"><a id="portalsinpolygonPortalsToFront" onclick="window.plugin.portalsinpolygons.bringPortalsToFront();false;" title="Bring portals to the front draw layer so that you can click on them after drawing a circle or polygon over them.">Portals To Front</a></span>';
-        listPortalsInPolygonControl = '<span style="white-space:nowrap"><a id="portalsinpolygonListPortals" onclick="window.plugin.portalsinpolygons.displayContainedPortals();false;" title="Display a list of portals in polygons, circles, and on lines.  Use the layer group check boxes to filter the portals.">Portals in Polygons</a></span>';
-        displayPortalsControl = '<span style="white-space:nowrap"><a id="portalsinpolygonListPortals" onclick="window.plugin.portalsinpolygons.displayPortals();false;" title="Display a list of portals.">Portals on Map</a></span>';
-        html = '<div style="color:#00C5FF;text-align:center;width:fit-content\;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;">' +
-            listPortalsInPolygonControl + '&nbsp;&nbsp; ' + displayPortalsControl + '&nbsp;&nbsp; ' + portalsToFrontControl +
-            '</div>';
-        dom = jQuery(html);
-        dom.attr("id", namespace + ".controls");
-        return (dom);
+
+        portalsToFrontControl = '<span style="white-space:nowrap"><a id="portalsinpolygons-portalsToFront" onclick="window.plugin.portalsinpolygons.bringPortalsToFront();false;" title="Bring portals to the front draw layer so that you can click on them after drawing a circle or polygon over them.">Portals To Front</a></span>';
+        listPortalsInPolygonControl = '<span style="white-space:nowrap"><a id="portalsinpolygons-portalsInPolygons" onclick="window.plugin.portalsinpolygons.displayContainedPortals();false;" title="Display a list of portals in polygons, circles, and on lines.  Use the layer group check boxes to filter the portals.">Portals in Polygons</a></span>';
+        displayPortalsControl = '<span style="white-space:nowrap"><a id="portalsinpolygons-portalsOnMap" onclick="window.plugin.portalsinpolygons.displayPortals();false;" title="Display a list of portals.">Portals on Map</a></span>';
+        controlsHtml = listPortalsInPolygonControl + '&nbsp;&#9679; ' + displayPortalsControl + '&nbsp;&#9679; ' + portalsToFrontControl;
+
+		pluginControl = new ToolboxControlSection(controlsHtml, "wise-toolbox-control-section", "wise-toolbox-control");
+		pluginControl.attr("id", namespace + ".controls");
+		pluginControl = pluginControl.mergeWithFamily();
+		return pluginControl;
     };
 
     /**
@@ -713,6 +716,11 @@ function wrapper(plugin_info) {
         if (!portalsinpolygons.prerequisitePluginsInstalled()) {
             return;
         }
+		// Standard sytling for "wise" family of toolbox controls
+		$("<style>")
+			.prop("type", "text/css")
+			.html("div.wise-toolbox-control-section {color:#00C5FF;text-align:center;width:fit-content;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;}")
+        .appendTo("head");
         // Add controls to IITC right hand side toolbox.
         controls = portalsinpolygons.getToolboxControls();
         $("#toolbox").append(controls);
@@ -721,14 +729,86 @@ function wrapper(plugin_info) {
         console.log (fname + ": End");
         delete portalsinpolygons.setup;
     };
+	/**
+	 * Creates a new ToolboxControlSection.
+	 *
+	 * @class
+	 * @param {String|Element|Text|Array|jQuery} content A object suitable for passing to `jQuery.append()`: a
+	 * 	DOM element, text node, array of elements and text nodes, HTML string, or jQuery object to insert at the end of
+	 *	each element in the set of matched elements.
+	 * @param {String} controlSectionClass The class name for a section of controls, typically in a `div` tag.
+	 * @param {String} [controlClass] An optional class name of a simple control or collection of controls.
+	 */
+	var ToolboxControlSection = function (content, controlSectionClass, controlClass) {
+		this.controlSectionClass = controlSectionClass;
+		this.controlClass = controlClass;
+		this.merged = false;
+		this.jQueryObj = jQuery('<div>').append(content).addClass(controlSectionClass);
+		//@todo: move the styles to a CSS class definition and add to the document in a style tag; but remember to provide the -moved class definition
+		};
 
+   	/**
+	 * See jQuery `.attr()` function.
+	 *
+	 * @returns {String}
+	 */
+	 ToolboxControlSection.prototype.attr = function (attributeNameOrAttributes, valueOrFunction) {
+         if (typeof valueOrFunction === 'undefined') {
+             return this.jQueryObj.attr(attributeNameOrAttributes);
+         } else {
+             return this.jQueryObj.attr(attributeNameOrAttributes, valueOrFunction);
+         }
+	};
+
+	/**
+	 * Appends toolbox controls with the same toolbox control section class and toolbox control class.
+	 */
+	ToolboxControlSection.prototype.mergeWithFamily = function () {
+		var controlFamily,
+            that;
+		if (!this.merged) {
+			that = this;
+			controlFamily = jQuery('.' + this.controlSectionClass);
+			if (controlFamily.length > 0) {
+				controlFamily.each(function() {
+					var jQobj = jQuery(this);
+					jQobj.css("border-style", "none");
+					that.jQueryObj.append(jQobj.removeClass(that.controlSectionClass).addClass(that.controlSectionClass + "-moved")); // remove oringal section so any subsequent merges have a single control section to deal with
+				});
+				this.merged = true;
+			}
+			if (typeof this.controlClass !== 'undefined') {
+				controlFamily = jQuery(':not(.' + this.controlSectionClass + ') .' + this.controlClass);
+				if (controlFamily.length > 0) {
+					controlFamily.each(function() {
+						that.jQueryObj.append(jQuery(this));
+					});
+					this.merged = true;
+				}
+			}
+		}
+		return this.jQueryObj;
+	};
+
+	/**
+	 * Override valueOf so that we get the desired behavior of getting the jQuery object when we access an object
+	 * directly.  For example,
+	 * ```
+	 * $("#toolbox").append(new ToolboxControlSection(html, "myfamily-control-section", "myfamily-control").mergeWithFamily();
+	 * ```
+	 *
+	 * @returns {Object} jQuery object.
+	 */
+	 ToolboxControlSection.prototype.valueOf = function () {
+		return this.jQueryObj;
+	};
+
+    // IITC plugin setup.
     // Set a setup.info property. The data will be used in the About IITC dialog in the section listing the
-    // installed plugins.  The plugin_info comes from the Tampermonkey/Greasemonkey comments at the top of
+    // installed plugins.  The plugin_info comes from the Greasemonkey/Tampermonkey comments at the top of
     // this file and is passed into the wrapper function when the script is added to the web page, below.
     var setup = portalsinpolygons.setup; // Set setup the plugin's setup/init method.
     setup.info = plugin_info;
-
-    // IITC plugin setup.
     if (window.iitcLoaded && typeof setup === "function") {
         setup();
     } else if (window.bootPlugins) {
