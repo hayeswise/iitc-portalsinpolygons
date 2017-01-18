@@ -2,7 +2,7 @@
 // @id             iitc-plugin-portalsinpolygons@hayeswise
 // @name           IITC plugin: Portals-in-Polygons
 // @category       Layer
-// @version        1.2017.01.13
+// @version        1.2017.01.18
 // @namespace      https://github.com/hayeswise/iitc-portalsinpolygons
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
 // @updateURL      https://raw.githubusercontent.com/hayeswise/iitc-wise-portalsinpolygon/master/wise-portalsinpolygons.user.js
@@ -16,7 +16,7 @@
 // ==/UserScript==
 // MIT License, Copyright (c) 2017 Brian Hayes ("Hayeswise")
 // For more information, visit https://github.com/hayeswise/iitc-wise-portalsinpolygon
-//"use strict";
+
 /*
  * Thanks to:
  * IITC - Ingress Intel Total Conversion - https://iitc.me/ and https://github.com/iitc-project/ingress-intel-total-conversion
@@ -80,6 +80,7 @@
  * @see {@link http://geomalgorithms.com/a03-_inclusion.html Inclusion of a Point in a Polygon} by Dan Sunday.
  */
 L.LatLng.prototype.isLeft = function (p1, p2) {
+	//"use strict";
     return ((p1.lng - this.lng) * (p2.lat - this.lat) -
             (p2.lng - this.lng) * (p1.lat - this.lat));
 };
@@ -103,6 +104,7 @@ L.LatLng.prototype.isLeft = function (p1, p2) {
  * @see {@link https://github.com/Fragger/Leaflet.Geodesic Leaflet.Geodesc} for information about Leaflet.Geodesc by Fragger.
  */
 L.Polyline.prototype.getWindingNumber = function (p) { // Note that L.Polygon extends L.Polyline
+    //"use strict";
     var i,
         isLeftTest,
         n,
@@ -155,6 +157,7 @@ L.Polyline.prototype.getWindingNumber = function (p) { // Note that L.Polygon ex
  * @returns {Object} An object being used as a map of IITC portals objects in the polygon.
  */
 L.Polyline.prototype.portalsIn = function () {
+    //"use strict";
     var fname = "L.Polynline.prototype.portalsIn";
     var containedPortals,
         keys,
@@ -193,6 +196,7 @@ L.Polyline.prototype.portalsIn = function () {
  * @see {@link https://github.com/Fragger/Leaflet.Geodesic Leaflet.Geodesc} for information about Leaflet.Geodesc by Fragger.
  */
 L.Polygon.prototype.contains = function (p) {
+    //"use strict";
     var rectangularBounds = this.getBounds();  // It appears that is O(1): the LatLngBounds is updated as points are added to the polygon when it is created.
     var wn;
     if (rectangularBounds.contains(p)) {
@@ -215,7 +219,7 @@ L.Polygon.prototype.contains = function (p) {
  * @param {string} plugin_info.script.description GM_info.script.description.
  */
 function wrapper(plugin_info) {
-    'use strict';
+    //"use strict";
     // Define the base plugin object if IITC is not already loaded.
 
     if (typeof window.plugin !== "function") {
@@ -391,7 +395,8 @@ function wrapper(plugin_info) {
     portalsinpolygons.formattedPortalList = function (portals) {
         //filter : 0 = All, 1 = Neutral, 2 = Res, 3 = Enl, -x = all but x
         var fname = namespace + "formattedPortalList";
-        var msg,
+        var guids, // {String[]}
+		    msg, // {String}
             portalList = [];
         guids = Object.keys(portals);
         console.log ("---");
