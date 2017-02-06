@@ -5,8 +5,8 @@
 // @version        1.2017.02.04
 // @namespace      https://github.com/hayeswise/ingress-intel-total-conversion
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
-// @updateURL      https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.meta.js
-// @downloadURL    https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.meta.js
+// @updateURL      https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.user.js
+// @downloadURL    https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.user.js
 // @include        https://*.ingress.com/intel*
 // @include        http://*.ingress.com/intel*
 // @match          https://*.ingress.com/intel*
@@ -939,4 +939,3 @@ var info = {};
 if (typeof GM_info !== 'undefined' && GM_info && GM_info.script) info.script = {version: GM_info.script.version, name: GM_info.script.name, description: GM_info.script.description };
 script.appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));
 (document.body || document.head || document.documentElement).appendChild(script);
-
