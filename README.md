@@ -1,4 +1,5 @@
 # iitc-portalsinpolygons
+<img align="right" src="https://github.com/hayeswise/iitc-portalsinpolygon/raw/master/docs/portals-in-polygons-ui.png">
 IITC plugin for displaying a list of portals in polygons and circles, and their perimeter, and on lines.
 The Portals-in-Polygon is a plugin for the [Ingress Intel Total Conversion](https://iitc.me/) web application and is used to 
 display a list of portals in, and on the edges of, polygons and circles.  It wil also display the list of portals on lines.
@@ -6,9 +7,9 @@ display a list of portals in, and on the edges of, polygons and circles.  It wil
 The plugin also provides the ability to bring portals to the front draw layer so that you can click on them after drawing a 
 circle or polygon over them.
 
-![Portals-in-Polygon controls](https://github.com/hayeswise/iitc-portalsinpolygon/raw/master/docs/portals-in-polygons-ui.png)
-
 See the [Wiki](https://github.com/hayeswise/iitc-portalsinpolygon/wiki) for the API and a user guide on creating your own customizations.
+
+This plugin uses ![Leaflet.PointInPolygon](https://github.com/hayeswise/Leaflet.PointInPolygon/raw/master/PiPwn-logo.png?raw=true).
 
 # Prerequistites
 * IITC ([https://IITC.me](https://iitc.me/))
