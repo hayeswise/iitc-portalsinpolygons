@@ -2,21 +2,21 @@
 // @id             iitc-plugin-portalsinpolygons@hayeswise
 // @name           IITC plugin: Portals-in-Polygons
 // @category       Layer
-// @version        1.2017.02.04
+// @version        1.2017.02.24
 // @namespace      https://github.com/hayeswise/ingress-intel-total-conversion
 // @description    Display a list of portals in, on on the perimeter of, polygons and circles, and on lines.  Use the layer group check boxes to filter the portals.
-// @updateURL      https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.user.js
-// @downloadURL    https://github.com/hayeswise/iitc-portalsinpolygons/raw/master/wise-portalsinpolygons.user.js
+// @updateURL      https://github.com/hayeswise/iitc-shadowops/raw/master/dist/plugins/wise-portalsinpolygons.meta.js
+// @downloadURL    https://github.com/hayeswise/iitc-shadowops/raw/master/dist/plugins/wise-portalsinpolygons.user.js
 // @include        https://*.ingress.com/intel*
 // @include        http://*.ingress.com/intel*
 // @match          https://*.ingress.com/intel*
 // @match          http://*.ingress.com/intel*
+// @require        https://rawgit.com/hayeswise/Leaflet.PointInPolygon/v1.0.0/wise-leaflet-pip.js
 // @author         Hayeswise
 // @grant          none
 // ==/UserScript==
 // MIT License, Copyright (c) 2017 Brian Hayes ("Hayeswise")
 // For more information, visit https://github.com/hayeswise/iitc-wise-portalsinpolygon
-
 /*
  * Thanks to:
  * IITC - Ingress Intel Total Conversion - https://iitc.me/ and https://github.com/iitc-project/ingress-intel-total-conversion
@@ -27,6 +27,20 @@
  * Dan Sunday's Winding Number and isLeft C++ implementation - http://geomalgorithms.com/.
  *   Copyright and License: http://geomalgorithms.com/a03-_inclusion.html
  */
+ /**
+ * Greasemonkey/Tampermonkey information about the plugin.
+ * @typedef ScriptInfo
+ * @type {Object}
+ * @property {String} version This is set to GM_info.script.version.
+ * @property {String} name This is set to GM_info.script.name.
+ * @property {String} description This is set to GM_info.script.description.
+ */
+/**
+ * Plugin information which includes the Greasemonkey/Tampermonkey information about the plugin.
+ * @typedef PluginInfo
+ * @type {Object}
+ * @property {ScriptInfo} script Greasemonkey/Tampermonkey information about the plugin.
+ */
 /**
   * The IITC map object (a Leaflet map).
   * @external "window.map"
@@ -35,6 +49,7 @@
 /**
   * The IITC portals object (used as a map) that contains a list of the cached
   * portal information for the portals in the current and surrounding view.
+  * @type {Object<string, Object>} Assoiciative array of portal information keyed by the portal's guid.
   * @external "window.portals"
   * @see {@link https://iitc.me/ Ingress Intel Total Conversion}
   */
@@ -49,432 +64,326 @@
  * @external "window.plugin.portalslist"
  * @see {@link http://leafletjs.com/ "show list of portals"} plugin source code for further information.
  */
+
 /**
- * Establish varioius helpers and polyfills.
- * @module {function} helpers
+ * Required Plugins helper.
+ * @module {function} "window.helper.requiredPlugins"
  */
-(function(global) {
-    "use strict";
-    if (typeof global.helpers !== "function") {
-        global.helpers = function () {};
+ ;(function () {
+  "use strict";
+  /**
+   * Information about a plugin.  The `pluginKey` is the property name of the
+   * plugin in the `window.plugin` associative array.  The `name` value is used
+   * in messaging about the plugins (e.g., if it is missing).
+   * @typedef PluginMetaData
+   * @type {Object}
+   * @property {String} pluginKey The property name of the plugin in
+   *  `window.plugin`.
+   * @property {String} name A title or short name of the plugin.
+   * @example
+   * {
+   *   pluginKey: "drawTools",
+   *   name: "draw tools"
+   * }
+   */
+  // Aggregate helpers in the window.helper object
+  if (typeof window.helper !== "object") {
+    window.helper = {};
+  }
+  window.helper.requiredPlugins = {};
+  /**
+   * Required Plugins namespace.
+   * @alias "window.helper.requiredPlugins"
+   * @variation 2
+   */
+  var self = window.helper.requiredPlugins;
+  self.spacename = "helper.requiredPlugins";
+  self.version = "0.1.0";
+
+  /**
+   * Returns true if all the prerequisite plugins are installed.
+   * @param {PluginMetaData[]} prerequisites An array of
+   * `RequiredPluginMetaData`.
+   * @returns {boolean} Returns `true` if all the prerequisite plugins are
+   *  installed; otherwise, returns `false`.
+   * @example
+   * window.plugin.myPlugin.requiredPlugins = [{
+   *   pluginKey: window.plugin.drawTools,
+   *   name: "draw tools"
+   * }, {
+   *   pluginKey: window.plugin.myotherplugin,
+   *   name: "My Other Plugin"
+   * }]
+   * ...
+   * if (window.helper.requiredPlugins.areMissing(window.plugin.myPlugin.requiredPlugins)) {
+   *    return;
+   * }
+   */
+  self.areMissing = function (prerequisites) {
+    var areMissing;
+    areMissing = prerequisites.some(function (metadata) {
+      return (typeof window.plugin[metadata.pluginKey] === "undefined");
+    });
+    return areMissing;
+  };
+
+  /**
+   * Checks if the prerequisite/required plugins are installed.
+   * @param {PluginMetaData[]} requiredPlugins An array of plugin meta-data on
+   * the required plugins.
+   * @returns {PluginMetaData[]}
+   * @example
+   * window.plugin.myPlugin.requiredPlugins = [{
+   *   pluginKey: window.plugin.drawTools,
+   *   name: "draw tools"
+   * }, {
+   *   pluginKey: window.plugin.myotherplugin,
+   *   name: "My Other Plugin"
+   * }]
+   * ...
+   * var missing = window.helper.requiredPlugins.missingPluginNames(window.plugin.myPlugin.requiredPlugins);
+   * if (missing.length > 0) {
+   *   msg = 'IITC plugin "' + pluginName + '" requires IITC plugin' + ((missing.length === 1) ? ' ' : 's ') +
+   *     ((missing.length === 1) ? missing[0] : (missing.slice(0,-1).join(", ") + " and " + missing[missing.length - 1])) + '.';
+   *   console.warn(msg);
+   *   alert(msg);
+   * }
+   */
+  self.missingPluginNames = function (requiredPlugins) {
+    var missing = [];
+    requiredPlugins.forEach(function (metadata) {
+      if (metadata.pluginKey === undefined) {
+        missing.push('"' + metadata.name + '"');
+      }
+    });
+    return missing;
+  };
+
+  /**
+   * Checks if the pre-requisite plugins are installed.  If one or more requisites are not installed, an alert is
+   * displayed.
+   * @param {RequiredPluginMetaData[]} requiredPlugins An array of plugin meta-data on the required plugins.
+   * @param {string} pluginName The name of the plugin requiring the required plugins.  Recommend using
+   *    `plugin_info.script.name`.
+   * @returns {boolean}
+   * @example
+   * window.plugin.myPlugin.requiredPlugins = [{
+   *   pluginKey: window.plugin.drawTools,
+   *   name: "draw tools"
+   * }, {
+   *   pluginKey: window.plugin.myotherplugin,
+   *   name: "My Other Plugin"
+   * }]
+   * ...
+   * if (!window.helper.requiredPlugins.alertIfNotInstalled(window.plugin.myPlugin.requiredPlugins, plugin_info.script.name) {
+   *    return;
+   * }
+   */
+  self.alertIfNotInstalled = function (requiredPlugins, pluginName) {
+    var missing = [],
+      msg;
+    missing = self.missingPluginNames(requiredPlugins);
+    if (missing.length > 0) {
+      msg = 'IITC plugin "' + pluginName + '" requires IITC plugin' + ((missing.length === 1) ? ' ' : 's ') +
+        ((missing.length === 1) ? missing[0] : (missing.slice(0, -1).join(", ") + " and " + missing[missing.length - 1])) + '.';
+      window.console.warn(msg);
+      alert(msg);
     }
-    /**
-	 * Plugin Helpers namespace.
-	 * @namespace
-	 */
-    var helpers = global.helpers;
-    var spacename = "helpers";
+    return (missing.length === 0);
+  };
+}());
 
-    // Polyfill Array.find if not available
-    // Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
-    if (!Array.prototype.find) {
-        Object.defineProperty(Array.prototype, 'find', {
-            value: function(predicate) {
-                if (this === null) {
-                    throw new TypeError('Array.prototype.find called on null or undefined');
-                }
-                if (typeof predicate !== 'function') {
-                    throw new TypeError('predicate must be a function');
-                }
-                var list = Object(this);
-                var length = list.length >>> 0;
-                var thisArg = arguments[1];
-                var value;
+/**
+ * Toolbox Control Section helper.
+ * @module {function} "window.helper.ToolboxControlSection"
+ */
+;(function () {
+  "use strict";
+  // Aggregate helpers in the window.helper object
+  if (typeof window.helper !== "object") {
+    window.helper = {};
+  }
 
-                for (var i = 0; i < length; i++) {
-                    value = list[i];
-                    if (predicate.call(thisArg, value, i, list)) {
-                        return value;
-                    }
-                }
-                return undefined;
-            }
-        });
+  /**
+   * ToolboxControlSection Class.  Provides a standardized way of adding toolbox controls and grouping controls in
+   * the same "family".
+   */
+  /**
+   * Creates a new ToolboxControlSection.
+   *
+   * @class
+   * @param {String|Element|Text|Array|jQuery} content A object suitable for passing to `jQuery.append()`: a
+   * 	DOM element, text node, array of elements and text nodes, HTML string, or jQuery object to insert at the end of
+   *	each element in the set of matched elements.
+   * @param {String} controlSectionClass The class name for a section of controls, typically in a `div` tag.
+   * @param {String} [controlClass] An optional class name of a simple control or collection of controls.
+   * @property {String} defaultStyle Global CSS for the toolbox control section.  Set
+   *  using `setStyle()`.
+   * @property {String} style Global CSS for the toolbox control section.  Set
+   *  using `setStyle()`.
+   */
+  window.helper.ToolboxControlSection = function (content, controlSectionClass, controlClass) {
+    this.controlSectionClass = controlSectionClass;
+    this.controlClass = controlClass;
+    this.merged = false;
+    this.jQueryObj = jQuery('<div>').append(content).addClass(controlSectionClass);
+  };
+  // Properties
+  var self = window.helper.ToolboxControlSection;
+  self.version = "0.1.0";
+  self.defaultStyle = "div.wise-toolbox-control-section {color:#00C5FF;text-align:center;width:fit-content;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;}";
+  self.style = undefined;
+  /**
+   * See jQuery `.attr()` function.
+   *
+   * @returns {String}
+   * @todo Consider removing this.
+   */
+  self.prototype.attr = function (attributeNameOrAttributes, valueOrFunction) {
+    if (typeof valueOrFunction === 'undefined') {
+      return this.jQueryObj.attr(attributeNameOrAttributes);
+    } else {
+      return this.jQueryObj.attr(attributeNameOrAttributes, valueOrFunction);
     }
-    /**
-	 * Checks if the pre-requisite plugins are installed.  If one or more requisites are not installed, an alert is
-	 * displayed.
-	 * @param {Object[]} requiredPlugins An array of objects describing the required plugins.  Each
-     * objecthas the properties `object` and `name`.  The `name` value appears in the alert if there are missing
-	 * plugins.
-     * @param {string} pluginName The name of the plugin for display in case of missing plugins.  Recommend using 
-     *    `plugin_info.script.name`.
-	 * <p>
-	 * For example,
-	 * ```
-	 * self.requiredPlugins = [{
-     *   object: window.plugin.drawTools,
-     *   name: "draw tools"
-     * }, {
-     *   object: window.plugin.myotherplugin,
-     *   name: "My Other Plugin"
-     * }]
-     * ...
-     * if (window.helpers.prerequisitePluginsInstalled(self.requiredPlugins, plugin_info.script.name) { 
-     *    ...
-	 * ```
-	 * @returns {boolean}
-	 */
-    helpers.prerequisitePluginsInstalled = function (requiredPlugins, pluginName) {
-        var missing = [],
-            msg;
-        requiredPlugins.forEach(function(plugin) {
-            if (plugin.object === undefined) {
-                missing.push('"' + plugin.name + '"');
-            }
+  };
+
+  /**
+   * Appends toolbox controls with the same toolbox control section class and toolbox control class.
+   * <p>
+   * Merge
+   * ```
+   * <div class="myControlFamily">
+   *    ...this control...
+   * </div>
+   * ```
+   * with
+   * ```
+   * <div class="myControlFamily">
+   *    ...other control...
+   * </div>
+   * ```
+   * to get
+   * ```
+   * <div class="myControlFamily">
+   *    ...this control...
+   *    ...other control...
+   * </div>
+   * ```
+   */
+  self.prototype.mergeWithFamily = function () {
+    var controlFamily,
+      that;
+    if (!this.merged) {
+      that = this;
+      controlFamily = jQuery('.' + this.controlSectionClass);
+      if (controlFamily.length > 0) {
+        controlFamily.each(function () {
+          var jQobj = jQuery(this);
+          jQobj.css("border-style", "none");
+          that.jQueryObj.append(jQobj.removeClass(that.controlSectionClass).addClass(that.controlSectionClass + "-moved")); // remove oringal section so any subsequent merges have a single control section to deal with
         });
-        if (missing.length > 0) {
-            msg = 'IITC plugin "' + pluginName + '" requires IITC plugin' + ((missing.length === 1) ? ' ' : 's ') +
-                ((missing.length === 1) ? missing[0] : (missing.slice(0,-1).join(", ") + " and " + missing[missing.length - 1])) + '.';
-            console.warn(msg);
-            alert(msg);
+        this.merged = true;
+      }
+      if (typeof this.controlClass !== 'undefined') {
+        controlFamily = jQuery(':not(.' + this.controlSectionClass + ') .' + this.controlClass);
+        if (controlFamily.length > 0) {
+          controlFamily.each(function () {
+            that.jQueryObj.append(jQuery(this));
+          });
+          this.merged = true;
         }
-        return (missing.length === 0);
-    };
+      }
+    }
+    return this.jQueryObj;
+  };
 
-    /******************************************************************************************************************
-     * ToolboxControlSection Class
-     *****************************************************************************************************************/
-	/**
-	 * ToolboxControlSection Class.  Provides a standardized way of adding toolbox controls and grouping controls in
-	 * the same "family".
-	 * @module {function} ToolboxControlSection
-	 */
-    /**
-	 * Creates a new ToolboxControlSection.
-	 *
-	 * @class
-	 * @param {String|Element|Text|Array|jQuery} content A object suitable for passing to `jQuery.append()`: a
-	 * 	DOM element, text node, array of elements and text nodes, HTML string, or jQuery object to insert at the end of
-	 *	each element in the set of matched elements.
-	 * @param {String} controlSectionClass The class name for a section of controls, typically in a `div` tag.
-	 * @param {String} [controlClass] An optional class name of a simple control or collection of controls.
-	 */
-    helpers.ToolboxControlSection = function (content, controlSectionClass, controlClass) {
-        this.controlSectionClass = controlSectionClass;
-        this.controlClass = controlClass;
-        this.merged = false;
-        this.jQueryObj = jQuery('<div>').append(content).addClass(controlSectionClass);
-    };
+  /**
+   * Sets the documents's styling.  Will not add the style if previously used.
+   * @param {String} [styling] CSS styles.
+   */
+  self.prototype.setStyle = function (styling) {
+    if (typeof styling === "undefined") {
+      styling = self.defaultStyle;
+    }
+    if (typeof self.style === 'undefined' || (self.style !== styling)) {
+      self.style = styling;
+      jQuery("<style>")
+        .prop("type", "text/css")
+        .html(styling)
+        .appendTo("head");
+    }
+  };
 
-    /**
-	 * See jQuery `.attr()` function.
-	 *
-	 * @returns {String}
-	 * @todo Consider removing this.
-	 */
-    helpers.ToolboxControlSection.prototype.attr = function (attributeNameOrAttributes, valueOrFunction) {
-        if (typeof valueOrFunction === 'undefined') {
-            return this.jQueryObj.attr(attributeNameOrAttributes);
-        } else {
-            return this.jQueryObj.attr(attributeNameOrAttributes, valueOrFunction);
-        }
-    };
+  /**
+   * Override valueOf so that we get the desired behavior of getting the jQuery object when we access an object
+   * directly.
+   * @returns {Object} jQuery object.
+   * @example
+   * $("#toolbox").append(new ToolboxControlSection(html, "myfamily-control-section", "myfamily-control").mergeWithFamily();
+   */
+  self.prototype.valueOf = function () {
+    return this.jQueryObj;
+  };
+}());
 
-    /**
-	 * Appends toolbox controls with the same toolbox control section class and toolbox control class.
-	 * <p>
-	 * Merge
-	 * ```
-	 * <div class="myControlFamily">
-     *    ...this control...
-	 * </div>
-	 * ```
-	 * with
-	 * ```
-	 * <div class="myControlFamily">
-     *    ...other control...
-	 * </div>
-	 * ```
-	 * to get
-	 * ```
-	 * <div class="myControlFamily">
-     *    ...this control...
-     *    ...other control...
-	 * </div>
-	 * ```
-	 */
-    helpers.ToolboxControlSection.prototype.mergeWithFamily = function () {
-        var controlFamily,
-            that;
-        if (!this.merged) {
-            that = this;
-            controlFamily = jQuery('.' + this.controlSectionClass);
-            if (controlFamily.length > 0) {
-                controlFamily.each(function() {
-                    var jQobj = jQuery(this);
-                    jQobj.css("border-style", "none");
-                    that.jQueryObj.append(jQobj.removeClass(that.controlSectionClass).addClass(that.controlSectionClass + "-moved")); // remove oringal section so any subsequent merges have a single control section to deal with
-                });
-                this.merged = true;
-            }
-            if (typeof this.controlClass !== 'undefined') {
-                controlFamily = jQuery(':not(.' + this.controlSectionClass + ') .' + this.controlClass);
-                if (controlFamily.length > 0) {
-                    controlFamily.each(function() {
-                        that.jQueryObj.append(jQuery(this));
-                    });
-                    this.merged = true;
-                }
-            }
-        }
-        return this.jQueryObj;
-    };
 
-    /**
-	 * Sets the documents's styling.  Will not add the style if previously used.
-	 * @param {String} [styling] CSS styles.
-	 */
-	helpers.ToolboxControlSection.setStyle = function (styling) {
-		styling = (typeof styling === 'undefined') ? styling : "div.wise-toolbox-control-section {color:#00C5FF;text-align:center;width:fit-content;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;}";
-        if (typeof helpers.ToolboxControlSection.style === 'undefined' || (helpers.ToolboxControlSection.style !== styling)) {
-			helpers.ToolboxControlSection.style = styling;
-            jQuery("<style>")
-				.prop("type", "text/css")
-				.html(styling)
-				.appendTo("head");
-        }
-    };
-
-    /**
-	 * Override valueOf so that we get the desired behavior of getting the jQuery object when we access an object
-	 * directly.  For example,
-	 * ```
-	 * $("#toolbox").append(new ToolboxControlSection(html, "myfamily-control-section", "myfamily-control").mergeWithFamily();
-	 * ```
-	 *
-	 * @returns {Object} jQuery object.
-	 */
-    helpers.ToolboxControlSection.prototype.valueOf = function () {
-        return this.jQueryObj;
-    };
-}(window));
-
-/******************************************************************************
- * wise-leaflet-extensions
- * @author Brian S Hayes (Hayeswise)
- * MIT License, Copyright (c) 2017 Brian Hayes ("Hayeswise")
- *****************************************************************************/
 /**
- * The Leaflet LatLng class.
- * @external "L.LatLng"
- * @see {@link http://leafletjs.com/ Leaflet} documentation for further information.
+ * Portals-in-Polygon IITC plugin.  The plugin and its members can be accessed via
+ * `window.plugin.portalsinpolygons`.
+ * @module {function} "window.plugin.portalsinpolygons"
  */
-/**
- * The Leaflet Polyline class.
- * @external "L.Polyline"
- * @see {@link http://leafletjs.com/ Leaflet} documentation for further information.
- */
-/**
- * The Leaflet Polygon class.
- * L.GeodesicPolygon and L.GeodesicCircle extend L.Polygon.
- * @external "L.Polygon"
- * @see {@link http://leafletjs.com/ Leaflet} documentation for further information.
- */
-
-(function (L) {
-    /**
-     * Tests if a point is left|on|right of an infinite line.
-     * <br><br>
-     * This is a JavaScript and Leaflet port of the `isLeft()` C++ function by Dan Sunday.
-     * @function external:"L.LatLng"#isLeft
-     * @param {LatLng} p1 Point The reference line is defined by `this` LatLng to p1.
-     * @param {LatLng} p2 The point in question.
-     * @return >0 for p2 left of the line through this point and p1,
-     *          =0 for p2 on the line,
-     *          <0 for p2 right of the line through this point an p1.
-     * @see {@link http://geomalgorithms.com/a03-_inclusion.html Inclusion of a Point in a Polygon} by Dan Sunday.
-     */
-    L.LatLng.prototype.isLeft = function (p1, p2) {
-        //"use strict";
-        return ((p1.lng - this.lng) * (p2.lat - this.lat) -
-                (p2.lng - this.lng) * (p1.lat - this.lat));
-    };
-
-    /**
-     * Test for a point in a polygon or on the bounding lines of the polygon.  The
-     * coordinates (L.LatLngs) for a GeodesicPolygon are set to follow the earth's
-     * curvature when the GeodesicPolygon object is created.  Since L.Polygon
-     * extends L.Polyline we can use the same method for both.  Although, for
-     * L.Polyline, we only get points on the line even if a collection of lines
-     * appear to make a polygon.
-     * <br><br>
-     * This is a JavaScript and Leaflet port of the `wn_PnPoly()` C++ function by Dan Sunday.
-     * Unlike the C++ version, this implementation does include points on the line and vertices.
-     *
-     * @function external:"L.Polyline"#getWindingNumber
-     * @param p {L.LatLng} A point.
-     * @retuns {Number} The winding number (=0 only when the point is outside)
-     *
-     * @see {@link http://geomalgorithms.com/a03-_inclusion.html Inclusion of a Point in a Polygon} by Dan Sunday.
-     * @see {@link https://github.com/Fragger/Leaflet.Geodesic Leaflet.Geodesc} for information about Leaflet.Geodesc by Fragger.
-     */
-    L.Polyline.prototype.getWindingNumber = function (p) { // Note that L.Polygon extends L.Polyline
-        //"use strict";
-        var i,
-            isLeftTest,
-            n,
-            vertices,
-            wn; // the winding number counter
-        vertices = this.getLatLngs().filter(function (v, i, array) {
-            if (i > 0 && v.lat === array[i-1].lat && v.lng === array[i-1].lng) { // Intenionally not using L.LatLng.equals since equals() allows for small margin of error.
-                return false;
-            } else {
-                return true;
-            }
-        });
-        n = vertices.length;
-        // Note that per the algorithm, the vertices (V) must be "a vertex points of a polygon V[n+1] with V[n]=V[0]"
-        if (n > 0 && !vertices[n-1].equals(vertices[0])) {
-            vertices.push(vertices[0]);
-        }
-        n = vertices.length - 1;
-        wn = 0;
-        for (i=0; i < n; i++) {
-            isLeftTest = vertices[i].isLeft(vertices[i+1], p);
-            if (isLeftTest === 0) { // If the point is on a line, we are done.
-                wn = 1;
-                break;
-            } else {
-                if (isLeftTest !== 0) { // If not a vertex or on line (the C++ version does not check for this)
-                    if (vertices[i].lat <= p.lat) {
-                        if (vertices[i+1].lat > p.lat) { // An upward crossing
-                            if (isLeftTest > 0) { // P left of edge
-                                wn++; // have a valid up intersect
-                            }
-                        }
-                    } else {
-                        if (vertices[i+1].lat <= p.lat) {// A downward crossing
-                            if (isLeftTest < 0) { // P right of edge
-                                wn--; // have a valid down intersect
-                            }
-                        }
-                    }
-                } else {
-                    wn++;
-                }
-            }
-        }
-        return wn;
-    };
-
-    /**
-     * Returns a list of portals contained in the geodesic polygon.
-     * @returns {Object} An object being used as a map of IITC portals objects in the polygon.
-     */
-    L.Polyline.prototype.portalsIn = function () {
-        //"use strict";
-        var fname = "L.Polynline.prototype.portalsIn";
-        var containedPortals,
-            keys,
-            rectangularBounds,
-            point,
-            portal,
-            wn;
-        keys = Object.keys(window.portals);
-        rectangularBounds = this.getBounds();
-        containedPortals = new Map();
-        console.log (fname + ": Start");
-        console.log ("---");
-        console.log(["Index","Title","GUID","Lng(X)","Lat(Y)","WindingNumber"].join(","));
-        for (var i = 0; i < keys.length; i++) {
-            portal = window.portals[keys[i]];
-            point = L.latLng(portal.options.data.latE6 / 1E6, portal.options.data.lngE6 / 1E6);
-            // See if the point is within the rectangular boundary region containing the polygon.
-            if (rectangularBounds.contains(point)) {
-                wn = this.getWindingNumber(point);
-                console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6, wn].join(","));
-                if (wn !== 0) {
-                    //containedPortals.push(portal);
-                    containedPortals[portal.options.guid] = portal;
-                }
-            }
-        }
-        console.log ("---");
-        console.log (fname + ": End");
-        return containedPortals;
-    };
-
-    /**
-     * Checks if a single point is contained in a polygon.
-     * Note that L.GeodesicPolygons and L.GeodesicCircles are types of L.Polygon
-     * @param {L.LatLng} A geographical point with a latitude and longitude.
-     * @see {@link https://github.com/Fragger/Leaflet.Geodesic Leaflet.Geodesc} for information about Leaflet.Geodesc by Fragger.
-     */
-    L.Polygon.prototype.contains = function (p) {
-        //"use strict";
-        var rectangularBounds = this.getBounds();  // It appears that this is O(1): the LatLngBounds is updated as points are added to the polygon when it is created.
-        var wn;
-        if (rectangularBounds.contains(p)) {
-            wn = this.getWindingNumber(p);
-            return (wn !== 0);
-        } else {
-            return false;
-        }
-    };
-})(L); //L is set to Leaflet's L
-
 /**
  * Closure function for Portals-in-Polygon.
- *
+ * <p>
  * Standard IITC wrapper pattern used to create the plugin's closure when
  * "installed" using `document.createElement("script".appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));`
- * @param {Object} plugin_info Object containing Greasemonkey/Tampermonkey information about the plugin.
- * @param {string} plugin_info.script Greasemonkey/Tampermonkey information about the plugin.
- * @param {string} plugin_info.script.version GM_info.script.version.
- * @param {string} plugin_info.script.name GM_info.script.name.
- * @param {string} plugin_info.script.description GM_info.script.description.
+ * @param {PluginInfo} plugin_info Plugin information object provided the standard IITC PLUGINEND code.
  */
 
-function wrapper(plugin_info) {
-// ensure plugin framework is there, even if iitc is not yet loaded
+;function wrapper(plugin_info) {
+"use strict";// ensure plugin framework is there, even if iitc is not yet loaded
 if(typeof window.plugin !== 'function') window.plugin = function() {};
 
 //PLUGIN AUTHORS: writing a plugin outside of the IITC build environment? if so, delete these lines!!
 //(leaving them in place might break the 'About IITC' page or break update checks)
 plugin_info.buildName = 'wise';
-plugin_info.dateTimeVersion = '20170206.55349';
+plugin_info.dateTimeVersion = '20170226.80142';
 plugin_info.pluginId = 'wise-portalsinpolygons';
 //END PLUGIN AUTHORS NOTE
 
 
-// PLUGIN START ////////////////////////////////////////////////////////
-// Plugin code is enclosed by a wrapper function to be called within a <script> tag.d';
-
-    /**
-	 * Portals-in-Polygon IITC plugin.  The plugin and its members can be accessed via
-	 * `window.plugin.portalsinpolygons`.  The "public" members are documented as module members while the more
-	 * friend and private members are documented as part of the `wrapper` function.
-	 * @see {@link wrapper}
-	 * @module {function} portalsinpolygon
-	 */
+// PLUGIN START ///////////////////////////////////////////////////////////////
     window.plugin.portalsinpolygons = function () {};
-    /**
-	 * Portals-in-Polygon namespace.  `portalsinpolygon` is set to `window.plugin.portalsinpolygons`.
-	 * @namespace
+	/**
+	 * Portals-in-Polygon namespace.  `self` is set to `window.plugin.portalsinpolygons`.
+	 * @alias "window.plugin.portalsinpolygons"
+     * @variation 2
 	 */
-    var portalsinpolygons = window.plugin.portalsinpolygons;
-    var namespace = "portalsinpolygons";
+    var self = window.plugin.portalsinpolygons;
+    self.spacename = "portalsinpolygons";
     // Configuration
-    portalsinpolygons.title = "Portals-in-Polygon";
+    self.title = "Portals-in-Polygon";
+    self.version = "";
     /**
-	 * An array of objects describing the required plugins.  Each object has
-	 * has the properties `object` and `name`.  The `name` value appears in
-	 * messaging if there are missing plugins.
+	 * An array of objects describing the required plugins.
+     * @type {RequiredPluginMetaData[]} Array of required plugin meta-data.
 	 */
-    portalsinpolygons.requiredPlugins = [{
-        object: window.plugin.drawTools,
+    self.requiredPlugins = [{
+        pluginKey: "drawTools",
         name: "draw tools"
     }, {
-        object: window.plugin.portalslist,
+        pluginKey: "portalslist",
         name: "show list of portals"
     }];
 
     /**
-	 * Used when calling `window.isLayerGroupDisplayed(<String> name)`. E.g.,
-	 * `window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level])`.
+     * A assoicative array of layer chooser names.
+	 * Used when calling `window.isLayerGroupDisplayed(<String> name)`.
+     * @example
+	 * window.isLayerGroupDisplayed(self.layerChooserName[portal.options.data.level])
+     * @type {Object.<string, string>}
 	 */
-    portalsinpolygons.layerChooserName = {
+    self.layerChooserName = {
         0: "Unclaimed Portals",
         1: "Level 1 Portals",
         2: "Level 2 Portals",
@@ -490,15 +399,53 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
     };
 
     /**
+     * Returns a list of portals contained in the geodesic polygon. An optional
+     * associative array of portals (like window.portals) can be provided to
+     * restict the base list (e.g., to find if bookmarked portals are in the
+     * polygoon).
+     * @param {Object<string, Object>} [portals] Optional. An associative array
+     *  of IITC portal objects keyed by the portal guid.
+     *  Defaults to `window.portals`.
+     * @member external:L.Polyline.portalsIn
+     * @returns {Object<string, Object>} An associative array of portal
+     *  objects in the polygon.
+     */
+    L.Polyline.prototype.portalsIn = function (portals) {
+        var fname = "L.Polynline.prototype.portalsIn";
+        var containedPortals,
+            keys,
+            rectangularBounds,
+            point,
+            portal,
+            wn;
+        console.log (fname + ": Start");
+        portals =(typeof portals === "undefined") ? window.portals : portals;
+        keys = Object.keys(portals);
+        rectangularBounds = this.getBounds();
+        containedPortals = new Map();
+        console.log ("---");
+        console.log(["Index","Title","GUID","Lng(X)","Lat(Y)","WindingNumber"].join(","));
+        for (var i = 0; i < keys.length; i++) {
+            portal = portals[keys[i]];
+            point = L.latLng(portal.options.data.latE6 / 1E6, portal.options.data.lngE6 / 1E6);
+            if (this.contains(point)) {
+                containedPortals[portal.options.guid] = portal;
+                console.log ([i, '"' + portal.options.data.title + '"', portal.options.guid, portal.options.data.lngE6 / 1E6, portal.options.data.latE6 / 1E6, wn].join(","));
+            }
+        }
+        console.log ("---");
+        console.log (fname + ": End");
+        return containedPortals;
+    };
+
+    /**
 	 * Bring portals to the front of the draw layers so that you can click on
 	 * them after drawing a circle or polygon over the portals.
 	 * <br>
 	 * Thanks to Zaso's "Bring Portals To Front" at
 	 * <a href="http://www.giacintogarcea.com/ingress/iitc/bring-portals-to-front-by-zaso.meta.js"> Zaso Items</a>.
-	 * @global
-	 * @name window.plugin.portalsinpolygons.bringPortalsToFront
 	 */
-    portalsinpolygons.bringPortalsToFront = function(){
+    self.bringPortalsToFront = function(){
         window.Render.prototype.bringPortalsToFront(); // See IITC code
     };
 
@@ -507,7 +454,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * of `window.portals`).
 	 *
 	 * @callback getPortalsCallback
-	 * @returns {Object} An associative array of IITC portals.
+	 * @returns {Object<string,Object>} An associative array of IITC portals.
 	 * @see {@link displayPortals}
 	 * @see {@link displayContainedPortals}
      */
@@ -516,16 +463,14 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * Displays portals.  The portals are filtered based on selections in the layer chooser.
 	 * <br>
 	 * This function is generalized version of the `window.plugin.portalslist.displayPL` function.
-	 * @global
-	 * @name window.plugin.portalsinpolygons.displayPortals
 	 * @param {getPortalsCallback} [getPortalsFn] Optional. An callback function that returns an associative array of IITC
 	 *	portals. If the function is not provided or set to undefined, the portals in the current map bounds will be
 	 *	used.
      * @param {String} [title="Portal List"] Optional. A title for the portal list dialog.  The default is
 	 * "Portal list".
 	 */
-    portalsinpolygons.displayPortals = function (getPortalsFn, title) {
-        var fname = namespace + ".displayPortals";
+    self.displayPortals = function (getPortalsFn, title) {
+        var fname = self.spacename + ".displayPortals";
         var formattedPortals,
             list,
             msg,
@@ -535,7 +480,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         type = typeof getPortalsFn;
         if (type !== 'function') {
             if (type === 'undefined') {
-                getPortalsFn = portalsinpolygons.getPortalsInMapBounds;
+                getPortalsFn = self.getPortalsInMapBounds;
             } else {
                 msg = "Unexpected parameter type, '" + type + "', for function " + fname + ", parameter getPortalsFn.";
                 throw new TypeError (msg, plugin_info.name);
@@ -543,7 +488,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         }
         title = (typeof title === 'undefined' ? "Portal list" : title);
 
-        if (!portalsinpolygons.mapZoomHasPortals()) {
+        if (!self.mapZoomHasPortals()) {
             console.warn("Map is zoomed too far out to get sufficient portal data (e.g., the portal name).");
             list = $('<table class="noPortals"><tr><td>Please zoom to get additional portal data like the portal title.</td></tr></table>');
         } else {
@@ -559,7 +504,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 
             // Get portals and format them for display.
             portals = getPortalsFn.call(this);
-            formattedPortals = portalsinpolygons.formattedPortalList(portals);
+            formattedPortals = self.formattedPortalList(portals);
             if (formattedPortals.length > 0) {
                 list = window.plugin.portalslist.portalTable(window.plugin.portalslist.sortBy, window.plugin.portalslist.sortOrder, window.plugin.portalslist.filter);
             } else {
@@ -584,11 +529,9 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
     /**
 	 * Displays the portals contain in, and on the perimeter, of drawn polygons
 	 * and on any lines.
-	 * @global
-	 * @name window.plugin.portalsinpolygons.displayContainedPortals
 	 */
-    portalsinpolygons.displayContainedPortals = function () {
-        portalsinpolygons.displayPortals(portalsinpolygons.getContainedPortals, "Portals-in-Polygons");
+    self.displayContainedPortals = function () {
+        self.displayPortals(self.getContainedPortals, "Portals-in-Polygons");
     };
 
     /**
@@ -600,9 +543,9 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * @returns {Array<{portal:{Object}, values:{Array}, sortValues:{Array}>} Returns an array of
 	 *	formatted portals.
 	 */
-    portalsinpolygons.formattedPortalList = function (portals) {
+    self.formattedPortalList = function (portals) {
         //filter : 0 = All, 1 = Neutral, 2 = Res, 3 = Enl, -x = all but x
-        var fname = namespace + "formattedPortalList";
+        var fname = self.spacename + "formattedPortalList";
         var guids, // {String[]}
 		    msg, // {String}
             portalList = [];
@@ -668,8 +611,6 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * drawn on the map.<br>
 	 * Checks for layers of type L.Polygon, which includes L.GeodesicPolygon
 	 * and L.GeodesicCircle, and L.Polyline, which in L.GeodesicPolyline.
-	 * @global
-	 * @name window.plugin.portalsinpolygons.getContainedPortals
 	 * @param {(keepPortalCallback|true|false)} [keepPortalFn = window.plugin.portalsinpolygons.isPortalDisplayed] If a
 	 * callback function is
 	 *  provided, it will be called and passed the IITC portal object. If keepPortalFn is not a function and is set to
@@ -679,8 +620,8 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 *	"Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
 	 * @returns {Object} A collection of IITC portals.
 	 */
-    portalsinpolygons.getContainedPortals = function(keepPortalFn) {
-        var fname = namespace + ".getContainedPortals";
+    self.getContainedPortals = function(keepPortalFn) {
+        var fname = self.spacename + ".getContainedPortals";
         console.log (fname + ": Start");
         var enclosures,
             enclosureData,
@@ -692,11 +633,11 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         type = typeof keepPortalFn;
         if (type !== 'function') {
             if (type === 'undefined') {
-                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+                keepPortalFn = self.isPortalDisplayed;
             } else if (!keepPortalFn) {
                 keepPortalFn = function (portal) {return true;};
             } else {
-                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+                keepPortalFn = self.isPortalDisplayed;
             }
         }
         // Loop through all map elements looking for polygons and circles (and in the future polylines).
@@ -708,7 +649,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 
         portals = enclosures.reduce(function(collectedPortals, layer, currentIndex, array){
             var morePortals;
-            var desc = [currentIndex, portalsinpolygons.getLayerClassName(layer)];
+            var desc = [currentIndex, self.getLayerClassName(layer)];
             // start debug
             var latLngs = layer.getLatLngs();
             latLngs.forEach(function(latLng, i, array) {
@@ -745,7 +686,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * @param {L.Layer} layer An object whose class extends L.Layer.
 	 * @returns {String} A string representation of the layer class.
 	 */
-    portalsinpolygons.getLayerClassName = function getLayerClassName (layer) {
+    self.getLayerClassName = function getLayerClassName (layer) {
         if (layer instanceof L.GeodesicCircle) {
             return "L.GeodesicCircle";
         } else if (layer instanceof L.GeodesicPolygon) {
@@ -771,16 +712,16 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * @param {Object} portals An associative array of IITC portal objects.
 	 * @returns {string[]} An array of portal guids.
 	 */
-    portalsinpolygons.getPortalGuidsFilteredByLayerGroup = function (portals) {
+    self.getPortalGuidsFilteredByLayerGroup = function (portals) {
         var guids;
         guids = Object.keys(portals);
         guids = guids.filter(function (guid, i, array) {
             var keep;
             var portal = portals[guid];
-            keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.data.level]) &&
-                    ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
-                     (portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
-                     (portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
+            keep = (window.isLayerGroupDisplayed(self.layerChooserName[portal.options.data.level]) &&
+                    ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(self.layerChooserName.Resistance)) ||
+                     (portal.options.data.team === "E" && window.isLayerGroupDisplayed(self.layerChooserName.Enlightened)) ||
+                     (portal.options.data.team === "N" && window.isLayerGroupDisplayed(self.layerChooserName.Neutral))));
             return keep;
         });
         return guids;
@@ -798,9 +739,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 
     /**
 	 * Returns the portals within the displayed map boundaries.
-	 * @global
-	 * @name window.plugin.portalsinpolygons.getPortalsInMapBounds
-	 * @param {(keepPortalCallback|true|false)} [keepPortalFn = portalsinpolygons.isPortalDisplayed] If a callback function is
+	 * @param {(keepPortalCallback|true|false)} [keepPortalFn = self.isPortalDisplayed] If a callback function is
 	 *  provided, it will be called and passed the IITC portal object. If keepPortalFn is not a function and is set to
 	 *  something falsy, the portals will not be filtered.  If keepPortalCallback is not provided, explicitly
 	 *	undefined, or something truthy, then the default filtering will be
@@ -808,7 +747,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 *	"Level 1 Portals" to "Level 8 Portals", "Enlightened" and "Resistance".
 	 * @returns {Object} An associative array of IITC portal objects (a subset of `window.portals`).
 	 */
-    portalsinpolygons.getPortalsInMapBounds = function (keepPortalFn) {
+    self.getPortalsInMapBounds = function (keepPortalFn) {
         var displayBounds,
             type,
             boundedPortals;
@@ -816,11 +755,11 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         type = typeof keepPortalFn;
         if (type !== 'function') {
             if (type === 'undefined') {
-                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+                keepPortalFn = self.isPortalDisplayed;
             } else if (!keepPortalFn) {
                 keepPortalFn = function (portal) {return true;};
             } else {
-                keepPortalFn = portalsinpolygons.isPortalDisplayed;
+                keepPortalFn = self.isPortalDisplayed;
             }
         }
         displayBounds = window.map.getBounds(); // the bounds could contain larger than life lat and lngs if zoomed out far.
@@ -847,7 +786,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * into one subsection (same div tag).
 	 * @returns {Object} DOM elements.
 	 */
-    portalsinpolygons.getToolboxControls = function () {
+    self.getToolboxControls = function () {
 		var	controlsHtml,
             pluginControl,
             portalsToFrontControl,
@@ -859,10 +798,10 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         displayPortalsControl = '<span style="white-space:nowrap"><a id="portalsinpolygons-portalsOnMap" onclick="window.plugin.portalsinpolygons.displayPortals();false;" title="Display a list of portals.">Portals on Map</a></span>';
         controlsHtml = listPortalsInPolygonControl + '&nbsp;&#9679; ' + displayPortalsControl + '&nbsp;&#9679; ' + portalsToFrontControl;
 
-		pluginControl = new window.helpers.ToolboxControlSection(controlsHtml, "wise-toolbox-control-section", "wise-toolbox-control");
-		pluginControl.attr("id", namespace + ".controls");
+		pluginControl = new window.helper.ToolboxControlSection(controlsHtml, "wise-toolbox-control-section", "wise-toolbox-control");
+		pluginControl.attr("id", self.spacename + ".controls");
+        pluginControl.setStyle();
 		pluginControl = pluginControl.mergeWithFamily();
-        window.helpers.ToolboxControlSection.setStyle();
 		return pluginControl;
     };
 
@@ -873,12 +812,12 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * @param {Object} portal An IITC portal object.
 	 * @returns {(Object|null)} The IITC portal object or null.
 	 */
-    portalsinpolygons.isPortalDisplayed = function (portal) {
+    self.isPortalDisplayed = function (portal) {
         var keep;
-        keep = (window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName[portal.options.level]) &&
-                ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Resistance)) ||
-                 (portal.options.data.team === "E" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Enlightened)) ||
-                 (portal.options.data.team === "N" && window.isLayerGroupDisplayed(portalsinpolygons.layerChooserName.Neutral))));
+        keep = (window.isLayerGroupDisplayed(self.layerChooserName[portal.options.level]) &&
+                ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(self.layerChooserName.Resistance)) ||
+                 (portal.options.data.team === "E" && window.isLayerGroupDisplayed(self.layerChooserName.Enlightened)) ||
+                 (portal.options.data.team === "N" && window.isLayerGroupDisplayed(self.layerChooserName.Neutral))));
         return keep;
     };
 
@@ -889,7 +828,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 * @todo it might be easier to check if one of the portals has the data your are looking for (e.g., check if portal.options.data.title exists).
 	 * @returns {boolean} True if there is sufficient portal data; otherwise, returns false.
 	 */
-    portalsinpolygons.mapZoomHasPortals = function() {
+    self.mapZoomHasPortals = function() {
         var zoom = map.getZoom();
         zoom = getDataZoomForMapZoom(zoom);
         var tileParams = getMapZoomTileParameters(zoom);
@@ -899,11 +838,12 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
     /**
      * Setup function called by IITC.
      */
-    portalsinpolygons.setup = function init() { // If your setup is named something else, change the assignment in var setup = ... below.
-        var fname = namespace + ".setup";
+    self.setup = function init() {
+        var fname = self.spacename + ".setup";
         var controls;
-		console.log (fname + ": Start, version " + (!!plugin_info ? plugin_info.script.version : "unknown"));
-        if (!window.helpers.prerequisitePluginsInstalled(portalsinpolygons.requiredPlugins, plugin_info.script.name)) {
+        self.version = (!!plugin_info ? plugin_info.script.version : "unknown");
+		console.log (fname + ": Start, version " + self.version);
+        if (!window.helper.requiredPlugins.alertIfNotInstalled(self.requiredPlugins, plugin_info.script.name)) {
             return;
         }
 		// Standard sytling for "wise" family of toolbox controls
@@ -912,20 +852,21 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 			.html("div.wise-toolbox-control-section {color:#00C5FF;text-align:center;width:fit-content;border-top: 1px solid #20A8B1;border-bottom: 1px solid #20A8B1;}")
         .appendTo("head");
         // Add controls to IITC right hand side toolbox.
-        controls = portalsinpolygons.getToolboxControls();
+        controls = self.getToolboxControls();
         $("#toolbox").append(controls);
 
         // Delete setup function so that it is not run again.
         console.log (fname + ": End");
-        delete portalsinpolygons.setup;
+        delete self.setup;
     };
 
     /*
-     * Set the required setup function that is called or handled by PLUGINEND code provided IITC build script.  
-     * The function will be called if IITC is already loaded and, if not, saved for later execution.
+     * Set the required setup function that is called or handled by PLUGINEND
+     * code provided IITC build script.  The function will be called if IITC is
+     * already loaded and, if not, saved for later execution.
      */
-    var setup = portalsinpolygons.setup;
-//PLUGIN END //////////////////////////////////////////////////////////
+    var setup = self.setup;
+// PLUGIN END /////////////////////////////////////////////////////////////////
 
 setup.info = plugin_info; //add the script info data to the function as a property
 if(!window.bootPlugins) window.bootPlugins = [];
@@ -939,3 +880,5 @@ var info = {};
 if (typeof GM_info !== 'undefined' && GM_info && GM_info.script) info.script = {version: GM_info.script.version, name: GM_info.script.name, description: GM_info.script.description };
 script.appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));
 (document.body || document.head || document.documentElement).appendChild(script);
+
+
