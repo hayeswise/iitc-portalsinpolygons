@@ -384,7 +384,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
      * @type {Object.<string, string>}
 	 */
     self.layerChooserName = {
-        0: "Unclaimed Portals",
+        0: "Unclaimed/Placeholder Portals",
         1: "Level 1 Portals",
         2: "Level 2 Portals",
         3: "Level 3 Portals",
@@ -395,7 +395,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         8: "Level 8 Portals",
         Resistance: "Resistance",
         Enlightened: "Enlightened",
-        Neutral: "Unclaimed Portals"
+        Neutral: "Unclaimed/Placeholder Portals"
     };
 
     /**
