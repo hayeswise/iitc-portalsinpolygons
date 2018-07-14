@@ -395,7 +395,7 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
         8: "Level 8 Portals",
         Resistance: "Resistance",
         Enlightened: "Enlightened",
-        Neutral: "Unclaimed Portals"
+        Neutral: "Unclaimed/Placeholder Portals"
     };
 
     /**
@@ -814,10 +814,10 @@ plugin_info.pluginId = 'wise-portalsinpolygons';
 	 */
     self.isPortalDisplayed = function (portal) {
         var keep;
-        keep = (window.isLayerGroupDisplayed(self.layerChooserName[portal.options.level]) &&
+        keep = (portal.options.data.team === "N" && window.isLayerGroupDisplayed(self.layerChooserName.Neutral)) ||
+                 window.isLayerGroupDisplayed(self.layerChooserName[portal.options.level]) &&
                 ((portal.options.data.team === "R" && window.isLayerGroupDisplayed(self.layerChooserName.Resistance)) ||
-                 (portal.options.data.team === "E" && window.isLayerGroupDisplayed(self.layerChooserName.Enlightened)) ||
-                 (portal.options.data.team === "N" && window.isLayerGroupDisplayed(self.layerChooserName.Neutral))));
+                 (portal.options.data.team === "E" && window.isLayerGroupDisplayed(self.layerChooserName.Enlightened)));
         return keep;
     };
 
